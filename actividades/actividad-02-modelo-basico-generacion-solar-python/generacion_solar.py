@@ -9,9 +9,15 @@ Calcula la generación solar fotovoltaica diaria estimada usando:
 
 Fórmula base:
   Energía generada (kWh/día) = Irradiancia × Área × Eficiencia
+
+Incluye lectura del consumo real de las sedes del Hospital Nazareth (1-6)
+a partir del archivo Excel de consumo de energía 2018.
 """
 
+import os
+
 import matplotlib.pyplot as plt
+import openpyxl
 
 # ---------------------------------------------------------------------------
 # Parámetros del Hospital Nazareth (Barranquilla, Colombia)
@@ -19,6 +25,28 @@ import matplotlib.pyplot as plt
 AREA_PANELES_M2 = 500.0          # Área disponible para instalación de paneles (m²)
 EFICIENCIA_SISTEMA = 0.15        # Eficiencia del sistema FV (15 %)
 CONSUMO_DIARIO_KWH = 2800.0      # Consumo diario estimado del hospital (kWh/día)
+FRACCION_AREAS_CRITICAS = 0.40   # Fracción del consumo total en áreas críticas (40 %)
+DIAS_POR_MES = 30                # Días promedio por mes para conversiones mensuales
+
+# Ruta al archivo Excel con el consumo real de energía 2018
+_RUTA_EXCEL = os.path.join(
+    os.path.dirname(__file__), "..", "..", "data", "CONSUMO DE ENERGIA 2018.xlsx"
+)
+
+# Nombres de las hojas del Excel (Enero a Noviembre)
+_HOJAS_MESES = {
+    "Enero":      "ENERO 2018",
+    "Febrero":    "FEBRERO 2018 ",
+    "Marzo":      "MARZO 2018",
+    "Abril":      "ABRIL 2018",
+    "Mayo":       "MAYO 2018",
+    "Junio":      "JUNIO 2018",
+    "Julio":      "JULIO 2018",
+    "Agosto":     "AGOSTO 2018",
+    "Septiembre": "SEPTIEMBRE 2018",
+    "Octubre":    "OCTUBRE 2018",
+    "Noviembre":  "NOVIEMBRE 2018 ",
+}
 
 # Irradiancia solar promedio mensual para Barranquilla (kWh/m²/día)
 # Fuente: Atlas de Radiación Solar de Colombia / NASA POWER
@@ -44,6 +72,67 @@ IRRADIANCIA_MENSUAL = {
     "Noviembre":  4.7,
     "Diciembre":  4.9,
 }
+
+
+# ---------------------------------------------------------------------------
+# Lectura de datos reales del Excel
+# ---------------------------------------------------------------------------
+
+def cargar_consumo_nazareth(ruta_excel: str) -> dict[str, float]:
+    """Lee el Excel de consumo 2018 y retorna el consumo mensual total
+    de las sedes del Hospital Nazareth (1–6), de Enero a Noviembre.
+
+    La función detecta dinámicamente la fila de encabezado y la columna
+    'CONSUMO (kWh)' en cada hoja, ya que la estructura varía entre meses.
+
+    Args:
+        ruta_excel: Ruta al archivo CONSUMO DE ENERGIA 2018.xlsx.
+
+    Returns:
+        Diccionario {mes: consumo_total_kWh} para los 11 meses disponibles.
+    """
+    wb = openpyxl.load_workbook(ruta_excel, data_only=True)
+    consumo_mensual: dict[str, float] = {}
+
+    for mes, nombre_hoja in _HOJAS_MESES.items():
+        ws = wb[nombre_hoja]
+
+        # Buscar fila de encabezado y columna de consumo dinámicamente
+        consumo_col: int | None = None
+        header_row: int | None = None
+        for row_idx, row in enumerate(ws.iter_rows(min_row=1, values_only=True), start=1):
+            if any(
+                isinstance(c, str) and c.strip().upper() in ("SEDES", "SEDE")
+                for c in row
+            ):
+                for col_idx, cell in enumerate(row):
+                    if isinstance(cell, str) and "CONSUMO" in cell.upper():
+                        consumo_col = col_idx
+                        header_row = row_idx
+                        break
+                if header_row is not None:
+                    break
+
+        if header_row is None or consumo_col is None:
+            consumo_mensual[mes] = 0.0
+            continue
+
+        # Sumar consumo de las sedes del Hospital Nazareth (1-6)
+        # (header_row + 2 omite la fila de unidades '(kWh)' que sigue al encabezado)
+        total = 0.0
+        for row in ws.iter_rows(min_row=header_row + 2, values_only=True):
+            if not row or len(row) <= consumo_col:
+                continue
+            sede = row[0]
+            if not isinstance(sede, str) or "HOSPITAL NAZARETH" not in sede.upper():
+                continue
+            consumo = row[consumo_col]
+            if isinstance(consumo, (int, float)) and consumo > 0:
+                total += consumo
+
+        consumo_mensual[mes] = total
+
+    return consumo_mensual
 
 
 # ---------------------------------------------------------------------------
@@ -235,35 +324,81 @@ def analizar_escenarios(consumo: float) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    # -----------------------------------------------------------------------
+    # Cargar consumo real de las sedes del Hospital Nazareth (1-6)
+    # -----------------------------------------------------------------------
+    consumo_nazareth = cargar_consumo_nazareth(_RUTA_EXCEL)
+
+    if not consumo_nazareth:
+        print("No se encontraron datos de consumo para el Hospital Nazareth.")
+        return
+
+    # Consumo diario real (promedio de los 11 meses disponibles, Enero-Noviembre)
+    consumo_promedio_mensual = sum(consumo_nazareth.values()) / len(consumo_nazareth)
+    consumo_diario_real = consumo_promedio_mensual / DIAS_POR_MES
+
+    print("=" * 65)
+    print("  CONSUMO REAL – HOSPITAL NAZARETH SEDES 1–6 (2018)")
+    print("=" * 65)
+    print(f"  {'Mes':<12} {'Consumo total (kWh)':>22} {'Áreas críticas (kWh)':>22}")
+    print("-" * 65)
+    for mes, consumo in consumo_nazareth.items():
+        criticas = consumo * FRACCION_AREAS_CRITICAS
+        print(f"  {mes:<12} {consumo:>22,.0f} {criticas:>22,.0f}")
+    print("-" * 65)
+    criticas_promedio = consumo_promedio_mensual * FRACCION_AREAS_CRITICAS
+    print(f"  {'Promedio':<12} {consumo_promedio_mensual:>22,.0f} {criticas_promedio:>22,.0f}")
+    print("=" * 65)
+
+    # -----------------------------------------------------------------------
+    # Modelo de generación solar usando consumo real
+    # -----------------------------------------------------------------------
+    print()
     print("=" * 55)
     print("  MODELO BÁSICO DE GENERACIÓN SOLAR – HOSPITAL NAZARETH")
     print("=" * 55)
     print(f"  Área de paneles:        {AREA_PANELES_M2:>8.0f} m²")
     print(f"  Eficiencia del sistema: {EFICIENCIA_SISTEMA * 100:>8.0f} %")
-    print(f"  Consumo diario:         {CONSUMO_DIARIO_KWH:>8,.0f} kWh/día")
+    print(f"  Consumo diario real:    {consumo_diario_real:>8,.0f} kWh/día")
+    print(f"  (calculado de {len(consumo_nazareth)} meses, sedes 1-6)")
     print("-" * 55)
     print(f"  {'Mes':<{_COL_MES}} {'Irrad. (kWh/m²/día)':>{_COL_IRRAD}} {'Generación (kWh/día)':>{_COL_GEN}} {'Cobertura':>{_COL_COB}}")
     print("-" * 55)
 
     generacion = calcular_generacion_mensual(
-        IRRADIANCIA_MENSUAL, AREA_PANELES_M2, EFICIENCIA_SISTEMA
+        {m: IRRADIANCIA_MENSUAL[m] for m in consumo_nazareth},
+        AREA_PANELES_M2,
+        EFICIENCIA_SISTEMA,
     )
 
     for mes, energia in generacion.items():
         irr = IRRADIANCIA_MENSUAL[mes]
-        cobertura = calcular_cobertura(energia, CONSUMO_DIARIO_KWH)
+        consumo_diario_mes = consumo_nazareth[mes] / DIAS_POR_MES
+        cobertura = calcular_cobertura(energia, consumo_diario_mes)
         print(f"  {mes:<{_COL_MES}} {irr:>{_COL_IRRAD}.1f} {energia:>{_COL_GEN}.1f} {cobertura:>{_COL_COB - 1}.1f} %")
 
     energia_promedio = sum(generacion.values()) / len(generacion)
-    cobertura_promedio = calcular_cobertura(energia_promedio, CONSUMO_DIARIO_KWH)
+    cobertura_promedio = calcular_cobertura(energia_promedio, consumo_diario_real)
 
     print("-" * 55)
     print(f"  {'Promedio':<{_COL_MES}} {'':>{_COL_IRRAD}} {energia_promedio:>{_COL_GEN}.1f} {cobertura_promedio:>{_COL_COB - 1}.1f} %")
     print("=" * 55)
 
-    analizar_escenarios(CONSUMO_DIARIO_KWH)
+    # -----------------------------------------------------------------------
+    # Generación solar mensual propuesta (para comparar con consumo mensual)
+    # -----------------------------------------------------------------------
+    generacion_promedio_mensual = energia_promedio * DIAS_POR_MES
+
+    print()
+    print(
+        f"El Hospital Nazareth consume en promedio {consumo_promedio_mensual:,.0f} kWh "
+        f"y el sistema solar propuesto generaría {generacion_promedio_mensual:,.0f} kWh"
+    )
+    print()
+
+    analizar_escenarios(consumo_diario_real)
     graficar_generacion_mensual(
-        generacion, CONSUMO_DIARIO_KWH, AREA_PANELES_M2, EFICIENCIA_SISTEMA
+        generacion, consumo_diario_real, AREA_PANELES_M2, EFICIENCIA_SISTEMA
     )
 
 
