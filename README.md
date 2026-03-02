@@ -56,5 +56,4 @@ Ecosistema-hospitalario-solar/
 - **`data/CONSUMO DE ENERGIA 2018.xlsx`**: datos reales de consumo energético hospitalario del año 2018, utilizados como base para los modelos de simulación y análisis.
 
 ## Autor
-
-Hugo G. Hernandez Palma — Electiva III, Gerencia de Proyectos Sostenibles.
+* **Rick Rios** - [Rickr18](https://github.com/Rickr18)
