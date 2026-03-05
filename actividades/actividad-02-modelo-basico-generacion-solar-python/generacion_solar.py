@@ -10,10 +10,11 @@ Calcula la generación solar fotovoltaica diaria estimada usando:
 Fórmula base:
   Energía generada (kWh/día) = Irradiancia × Área × Eficiencia
 
-Incluye lectura del consumo real de las sedes del Hospital Nazareth (1-6)
+Incluye lectura del consumo real de Hospital Nazareth 1 (sede 1)
 a partir del archivo Excel de consumo de energía 2018.
 """
 
+import math
 import os
 
 import matplotlib.pyplot as plt
@@ -22,11 +23,16 @@ import openpyxl
 # ---------------------------------------------------------------------------
 # Parámetros del Hospital Nazareth (Barranquilla, Colombia)
 # ---------------------------------------------------------------------------
+SEDE_OBJETIVO = "HOSPITAL NAZARETH 1"   # Única sede analizada (instrucción docente)
 AREA_PANELES_M2 = 500.0          # Área disponible para instalación de paneles (m²)
 EFICIENCIA_SISTEMA = 0.15        # Eficiencia del sistema FV (15 %)
 CONSUMO_DIARIO_KWH = 2800.0      # Consumo diario estimado del hospital (kWh/día)
 FRACCION_AREAS_CRITICAS = 0.40   # Fracción del consumo total en áreas críticas (40 %)
 DIAS_POR_MES = 30                # Días promedio por mes para conversiones mensuales
+POTENCIA_PANEL_W = 400.0         # Potencia pico por panel (W)
+HORAS_SOL_PICO = 5.2             # HSP promedio anual Barranquilla
+W_POR_KW = 1000.0                # Factor de conversión vatios a kilovatios
+AREA_POR_PANEL_M2 = 2.0          # Área aproximada por panel estándar de 400 W (m²)
 
 # Ruta al archivo Excel con el consumo real de energía 2018
 _RUTA_EXCEL = os.path.join(
@@ -80,7 +86,7 @@ IRRADIANCIA_MENSUAL = {
 
 def cargar_consumo_nazareth(ruta_excel: str) -> dict[str, float]:
     """Lee el Excel de consumo 2018 y retorna el consumo mensual total
-    de las sedes del Hospital Nazareth (1–6), de Enero a Noviembre.
+    de Hospital Nazareth 1 (sede 1), de Enero a Noviembre.
 
     La función detecta dinámicamente la fila de encabezado y la columna
     'CONSUMO (kWh)' en cada hoja, ya que la estructura varía entre meses.
@@ -117,14 +123,14 @@ def cargar_consumo_nazareth(ruta_excel: str) -> dict[str, float]:
             consumo_mensual[mes] = 0.0
             continue
 
-        # Sumar consumo de las sedes del Hospital Nazareth (1-6)
+        # Sumar consumo de Hospital Nazareth 1 (sede 1 únicamente)
         # (header_row + 2 omite la fila de unidades '(kWh)' que sigue al encabezado)
         total = 0.0
         for row in ws.iter_rows(min_row=header_row + 2, values_only=True):
             if not row or len(row) <= consumo_col:
                 continue
             sede = row[0]
-            if not isinstance(sede, str) or "HOSPITAL NAZARETH" not in sede.upper():
+            if not isinstance(sede, str) or sede.strip().upper() != SEDE_OBJETIVO:
                 continue
             consumo = row[consumo_col]
             if isinstance(consumo, (int, float)) and consumo > 0:
@@ -213,7 +219,7 @@ def graficar_generacion_mensual(
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 9))
     fig.suptitle(
-        f"Hospital Nazareth – Modelo de Generación Solar\n"
+        f"Hospital Nazareth 1 – Modelo de Generación Solar\n"
         f"Área: {area} m²  |  Eficiencia: {eficiencia * 100:.0f} %",
         fontsize=13,
         fontweight="bold",
@@ -300,7 +306,7 @@ def analizar_escenarios(consumo: float) -> None:
                label=f"Consumo diario ({consumo:,.0f} kWh/día)")
     ax.set_ylabel("Energía generada (kWh/día)", fontsize=11)
     ax.set_title(
-        "Hospital Nazareth – Comparación de Escenarios de Instalación Solar",
+        "Hospital Nazareth 1 – Comparación de Escenarios de Instalación Solar",
         fontsize=11, fontweight="bold",
     )
     ax.legend(fontsize=9)
@@ -325,7 +331,7 @@ def analizar_escenarios(consumo: float) -> None:
 
 def main() -> None:
     # -----------------------------------------------------------------------
-    # Cargar consumo real de las sedes del Hospital Nazareth (1-6)
+    # Cargar consumo real de Hospital Nazareth 1 (sede 1)
     # -----------------------------------------------------------------------
     consumo_nazareth = cargar_consumo_nazareth(_RUTA_EXCEL)
 
@@ -338,7 +344,7 @@ def main() -> None:
     consumo_diario_real = consumo_promedio_mensual / DIAS_POR_MES
 
     print("=" * 65)
-    print("  CONSUMO REAL – HOSPITAL NAZARETH SEDES 1–6 (2018)")
+    print("  CONSUMO REAL – HOSPITAL NAZARETH 1 (2018)")
     print("=" * 65)
     print(f"  {'Mes':<12} {'Consumo total (kWh)':>22} {'Áreas críticas (kWh)':>22}")
     print("-" * 65)
@@ -360,7 +366,7 @@ def main() -> None:
     print(f"  Área de paneles:        {AREA_PANELES_M2:>8.0f} m²")
     print(f"  Eficiencia del sistema: {EFICIENCIA_SISTEMA * 100:>8.0f} %")
     print(f"  Consumo diario real:    {consumo_diario_real:>8,.0f} kWh/día")
-    print(f"  (calculado de {len(consumo_nazareth)} meses, sedes 1-6)")
+    print(f"  (calculado de {len(consumo_nazareth)} meses, sede 1 únicamente)")
     print("-" * 55)
     print(f"  {'Mes':<{_COL_MES}} {'Irrad. (kWh/m²/día)':>{_COL_IRRAD}} {'Generación (kWh/día)':>{_COL_GEN}} {'Cobertura':>{_COL_COB}}")
     print("-" * 55)
@@ -385,13 +391,31 @@ def main() -> None:
     print("=" * 55)
 
     # -----------------------------------------------------------------------
+    # Dimensionamiento del sistema para Sede 1
+    # -----------------------------------------------------------------------
+    energia_panel_kwh_dia = (POTENCIA_PANEL_W / W_POR_KW) * HORAS_SOL_PICO * EFICIENCIA_SISTEMA
+    paneles_necesarios = math.ceil(consumo_diario_real / energia_panel_kwh_dia)
+    area_necesaria_m2 = paneles_necesarios * AREA_POR_PANEL_M2
+
+    print()
+    print("=" * 55)
+    print("  DIMENSIONAMIENTO DEL SISTEMA – HOSPITAL NAZARETH 1")
+    print("=" * 55)
+    print(f"  Consumo diario Sede 1:        {consumo_diario_real:>8,.0f} kWh/día")
+    print(f"  Energía por panel/día:        {energia_panel_kwh_dia:>8.2f} kWh/panel/día")
+    print(f"  Paneles necesarios (100 %):   {paneles_necesarios:>8} paneles")
+    print(f"  Área mínima estimada:         {area_necesaria_m2:>8,.0f} m²")
+    print("  (referencia para Actividad 03)")
+    print("=" * 55)
+
+    # -----------------------------------------------------------------------
     # Generación solar mensual propuesta (para comparar con consumo mensual)
     # -----------------------------------------------------------------------
     generacion_promedio_mensual = energia_promedio * DIAS_POR_MES
 
     print()
     print(
-        f"El Hospital Nazareth consume en promedio {consumo_promedio_mensual:,.0f} kWh "
+        f"El Hospital Nazareth 1 consume en promedio {consumo_promedio_mensual:,.0f} kWh "
         f"y el sistema solar propuesto generaría {generacion_promedio_mensual:,.0f} kWh"
     )
     print()
