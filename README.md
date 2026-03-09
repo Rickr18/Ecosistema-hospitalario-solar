@@ -4,7 +4,7 @@
 
 El **Ecosistema Hospitalario Solar** es un proyecto académico de la asignatura Electiva III (Gerencia de Proyectos Sostenibles) orientado a integrar energía solar fotovoltaica, análisis de datos y productos digitales en el entorno hospitalario.
 
-El proyecto busca que el estudiante comprenda el hospital como un **sistema complejo de proyectos interrelacionados**, donde la energía solar no es solo una solución tecnológica, sino un componente estratégico que debe gestionarse con rigor, visión y responsabilidad. A través de 12 actividades progresivas, se desarrollan competencias en:
+El proyecto busca que el estudiante comprenda el hospital como un **sistema complejo de proyectos interrelacionados**, donde la energía solar no es solo una solución tecnológica, sino un componente estratégico que debe gestionarse con rigor, visión y responsabilidad. A través de 6 actividades progresivas, se desarrollan competencias en:
 
 - **Pensamiento sistémico**: análisis del hospital como ecosistema energético.
 - **Programación aplicada**: modelos de generación y consumo energético en Python.
@@ -25,13 +25,7 @@ Ecosistema-hospitalario-solar/
     ├── actividad-03-simulacion-demanda-energetica-hospitalaria/
     ├── actividad-04-dashboard-energetico-gerencia-hospitalaria/
     ├── actividad-05-design-thinking-problema-digital-hospitales/
-    ├── actividad-06-prototipo-ux-app-monitoreo-solar/
-    ├── actividad-07-integracion-python-ux/
-    ├── actividad-08-sistema-alertas-inteligentes-areas-criticas/
-    ├── actividad-09-gemelo-digital-energetico/
-    ├── actividad-10-evaluacion-impacto-clinico-operativo/
-    ├── actividad-11-modelo-negocio-producto-digital/
-    └── actividad-12-demo-final-comite-hospitalario/
+    └── actividad-06-prototipo-ux-app-monitoreo-solar/
 ```
 
 ## Actividades
@@ -44,12 +38,6 @@ Ecosistema-hospitalario-solar/
 | 4 | [Dashboard energético para la gerencia hospitalaria](actividades/actividad-04-dashboard-energetico-gerencia-hospitalaria/) | Visualización integrada de generación y consumo para la toma de decisiones. |
 | 5 | [Design Thinking: problema digital en hospitales](actividades/actividad-05-design-thinking-problema-digital-hospitales/) | Identificación del reto de innovación mediante metodología Design Thinking. |
 | 6 | [Prototipo UX de app de monitoreo solar hospitalario](actividades/actividad-06-prototipo-ux-app-monitoreo-solar/) | Diseño de la interfaz de usuario para la app de monitoreo solar. |
-| 7 | [Integración Python + UX](actividades/actividad-07-integracion-python-ux/) | Integración del backend Python con el prototipo UX en un producto digital funcional. |
-| 8 | [Sistema de alertas inteligentes para áreas críticas](actividades/actividad-08-sistema-alertas-inteligentes-areas-criticas/) | Módulo de alertas tempranas ante anomalías energéticas en áreas críticas. |
-| 9 | [Prototipo de gemelo digital energético](actividades/actividad-09-gemelo-digital-energetico/) | Representación virtual del sistema solar hospitalario para simulación y optimización. |
-| 10 | [Evaluación de impacto clínico y operativo](actividades/actividad-10-evaluacion-impacto-clinico-operativo/) | Análisis del impacto del producto digital en la operación hospitalaria. |
-| 11 | [Modelo de negocio del producto digital](actividades/actividad-11-modelo-negocio-producto-digital/) | Business Model Canvas y estrategia de sostenibilidad financiera del proyecto. |
-| 12 | [Demo final tipo comité hospitalario](actividades/actividad-12-demo-final-comite-hospitalario/) | Presentación integradora del producto digital ante un comité directivo simulado. |
 
 ## Datos disponibles
 
