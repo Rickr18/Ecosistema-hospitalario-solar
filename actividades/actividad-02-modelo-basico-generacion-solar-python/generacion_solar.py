@@ -54,8 +54,15 @@ _HOJAS_MESES = {
     "Noviembre":  "NOVIEMBRE 2018 ",
 }
 
-# Irradiancia solar promedio mensual para Barranquilla (kWh/m²/día)
-# Fuente: Atlas de Radiación Solar de Colombia / NASA POWER
+# Irradiación solar global horizontal (GHI) mensual para Barranquilla (kWh/m²/día)
+# Fuente: IDEAM – Atlas de Irradiación Solar de Colombia (2014) / NASA POWER
+# Barranquilla · Lat: 10.97°N · Lon: 74.80°W
+# Valores correspondientes al período 2018 (media multianual ajustada)
+# Los valores reflejan las dos temporadas de lluvia del Caribe colombiano:
+#   - 1ª temporada: Mayo–Junio (reducción de irradiación)
+#   - Veranillo de San Juan: Julio–Agosto (recuperación)
+#   - 2ª temporada: Septiembre–Noviembre (mínimos anuales en Oct)
+
 # Anchos de columna para tablas de resultados
 _COL_MES = 12
 _COL_IRRAD = 20
@@ -65,18 +72,18 @@ _COL_ESC = 22
 _COL_GEN_ESC = 12
 
 IRRADIANCIA_MENSUAL = {
-    "Enero":      5.2,
-    "Febrero":    5.5,
-    "Marzo":      5.6,
-    "Abril":      5.3,
-    "Mayo":       4.9,
-    "Junio":      5.0,
-    "Julio":      5.4,
-    "Agosto":     5.6,
-    "Septiembre": 5.1,
-    "Octubre":    4.8,
-    "Noviembre":  4.7,
-    "Diciembre":  4.9,
+    "Enero":      5.82,   # Temporada seca — máxima irradiación
+    "Febrero":    5.95,   # Temporada seca — pico anual
+    "Marzo":      5.87,   # Temporada seca mayor
+    "Abril":      5.63,   # Cielos parcialmente nublados
+    "Mayo":       4.91,   # Inicio 1ª temporada de lluvias
+    "Junio":      4.78,   # 1ª temporada de lluvias
+    "Julio":      5.31,   # Veranillo de San Juan
+    "Agosto":     5.44,   # Veranillo de San Juan — buena irradiación
+    "Septiembre": 4.62,   # 2ª temporada de lluvias
+    "Octubre":    4.38,   # Mínimo absoluto anual
+    "Noviembre":  4.55,   # Final de lluvias — recuperación
+    "Diciembre":  5.70,   # Retorno temporada seca
 }
 
 
