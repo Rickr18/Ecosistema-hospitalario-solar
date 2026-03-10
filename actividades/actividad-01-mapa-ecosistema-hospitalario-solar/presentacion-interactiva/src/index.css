@@ -113,3 +113,49 @@ body {
   color: white;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+/* Glow hover en tarjetas de datos */
+.card-glow:hover {
+  box-shadow: 0 0 32px 0 rgba(52, 211, 153, 0.15);
+}
+
+/* Animación de barras SVG al aparecer (height grow) */
+@keyframes barGrow {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+
+.bar-animated {
+  animation: barGrow 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Línea de flujo pulse */
+@keyframes linepulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+
+.line-pulse {
+  animation: linepulse 2s ease-in-out infinite;
+}
+
+/* Gradiente de texto animado */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-gradient-text {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Tooltip expand on hover */
+@keyframes tooltipAppear {
+  from { opacity: 0; transform: scale(0.92) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
