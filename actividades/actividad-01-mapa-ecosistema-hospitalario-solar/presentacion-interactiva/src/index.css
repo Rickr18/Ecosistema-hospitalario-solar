@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@theme {
+  --color-medical-blue-50: #eff6ff;
+  --color-medical-blue-100: #dbeafe;
+  --color-medical-blue-200: #bfdbfe;
+  --color-medical-blue-300: #93c5fd;
+  --color-medical-blue-400: #60a5fa;
+  --color-medical-blue-500: #3b82f6;
+  --color-medical-blue-600: #1d4ed8;
+  --color-medical-blue-700: #1e40af;
+  --color-medical-blue-800: #1e3a8a;
+  --color-medical-blue-900: #0c2461;
+  --color-medical-blue-950: #060e2b;
+
+  --color-energy-green-50: #ecfdf5;
+  --color-energy-green-100: #d1fae5;
+  --color-energy-green-200: #a7f3d0;
+  --color-energy-green-300: #6ee7b7;
+  --color-energy-green-400: #34d399;
+  --color-energy-green-500: #10b981;
+  --color-energy-green-600: #059669;
+  --color-energy-green-700: #047857;
+  --color-energy-green-800: #065f46;
+  --color-energy-green-900: #064e3b;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes flow {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-fade-in-left {
+  animation: fadeInLeft 0.8s ease-out forwards;
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight 0.8s ease-out forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.visible {
+  opacity: 1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #060e2b;
+  color: white;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Glow hover en tarjetas de datos */
+.card-glow:hover {
+  box-shadow: 0 0 32px 0 rgba(52, 211, 153, 0.15);
+}
+
+/* Animación de barras SVG al aparecer (height grow) */
+@keyframes barGrow {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+
+.bar-animated {
+  animation: barGrow 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Línea de flujo pulse */
+@keyframes linepulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+
+.line-pulse {
+  animation: linepulse 2s ease-in-out infinite;
+}
+
+/* Gradiente de texto animado */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-gradient-text {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Tooltip expand on hover */
+@keyframes tooltipAppear {
+  from { opacity: 0; transform: scale(0.92) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}

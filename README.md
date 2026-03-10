@@ -11,12 +11,57 @@ El proyecto busca que el estudiante comprenda el hospital como un **sistema comp
 - **Diseño centrado en el usuario**: prototipos UX/UI para la gestión energética.
 - **Gerencia de proyectos sostenibles**: evaluación de impacto, modelo de negocio y presentación ante comités directivos.
 
+## 🌟 Presentación Interactiva (React + Tailwind)
+
+La carpeta [`presentacion-interactiva/`](presentacion-interactiva/) contiene una **presentación web interactiva de alto nivel** sobre el Ecosistema Hospitalario Solar: Sede Nazareth 1.
+
+### Stack tecnológico
+- **React 19 + Vite 7** — Framework UI moderno y build tool ultrarrápido
+- **Tailwind CSS v4** — Utility-first CSS con tokens de tema personalizados
+- Paleta: azul médico · verde energía · blanco limpio
+- Animaciones de scroll-reveal fluidas
+
+### Comandos para ejecutar la presentación
+
+```bash
+cd presentacion-interactiva
+
+# Instalar dependencias
+npm install
+
+# Modo desarrollo (http://localhost:5173)
+npm run dev
+
+# Build de producción
+npm run build
+
+# Previsualizar el build
+npm run preview
+```
+
+### Secciones de la presentación
+1. **Hero** — Landing con métricas clave
+2. **Visión Sistémica** — Infografía de la tríada: Infraestructura, Energía y Gestión Sostenible
+3. **Mapa del Ecosistema** — Flujo de energía: Paneles → Inversores → UCI / Farmacia / Data Center
+4. **Flujo de Datos Real** — Pipeline Data 2018 → Python → Dashboard gerencial
+5. **Análisis de Retos** — Tarjetas: Costos, Espacio, Mantenimiento, Integración eléctrica
+6. **Impacto Triple Resultado** — Eficiencia económica · Responsabilidad ambiental · Seguridad del paciente
+
+---
+
 ## Estructura del proyecto
 
 ```
 Ecosistema-hospitalario-solar/
 ├── README.md                                        ← Este archivo
 ├── Actividades de gerencia de proyecto.pdf          ← Documento fuente de las actividades
+├── presentacion-interactiva/                        ← 🆕 Presentación React + Tailwind
+│   ├── src/
+│   │   ├── App.jsx                                  ← Todas las slides
+│   │   ├── App.css                                  ← Animaciones scroll-reveal
+│   │   └── index.css                                ← Tailwind v4 + tema
+│   ├── index.html
+│   └── package.json
 ├── data/
 │   └── CONSUMO DE ENERGIA 2018.xlsx                 ← Datos reales de consumo energético
 └── actividades/

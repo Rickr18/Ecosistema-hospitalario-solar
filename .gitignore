@@ -3,3 +3,7 @@ generacion_solar_nazareth.png
 escenarios_instalacion_nazareth.png
 **/__pycache__/
 *.pyc
+
+# Presentación interactiva — build artifacts and dependencies
+presentacion-interactiva/node_modules/
+presentacion-interactiva/dist/
