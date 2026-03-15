@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 /* ─── Scroll-reveal hook ─── */
@@ -11,6 +11,7 @@ function useScrollReveal() {
           if (e.isIntersecting) {
             const delay = e.target.dataset.delay || '0';
             e.target.style.transitionDelay = `${delay}ms`;
+            e.target.style.animationDelay = `${delay}ms`;
             e.target.classList.add('revealed');
             observer.unobserve(e.target);
           }
@@ -31,9 +32,9 @@ function EnergyFlowSVG() {
 
   const nodeData = {
     solar:       { title: '☀️ Paneles Fotovoltaicos',      color: '#f59e0b', specs: ['500 m² en cubierta', '~250 kWp potencia pico', 'Eficiencia: 15%', 'Tipo: Monocristalino PERC', 'Inclinación 10° · Orientación Sur'] },
-    battery:     { title: '🔋 Banco de Baterías',           color: '#a855f7', specs: ['Capacidad: 200 kWh', 'Tecnología: Li-Ion LFP', '>3.000 ciclos de vida', 'DoD máximo: 80%', 'BMS con control térmico'] },
-    grid:        { title: '🌐 Red Eléctrica Pública',       color: '#3b82f6', specs: ['Tensión: 220/440 V AC', 'Conexión bidireccional', 'Net metering activo', 'Reconexión automática', 'Protecciones TVSS + OCPD'] },
-    inverter:    { title: '⚡ Inversores Híbridos',         color: '#34d399', specs: ['Potencia: 250 kVA total', 'Tipo: híbrido DC/AC', 'MPPT eficiencia: 98.5%', 'Protección IP65', 'Comunicación RS485 / Modbus'] },
+    battery:     { title: '🔋 Banco de Baterías LFP',       color: '#a855f7', specs: ['Capacidad: 300 kWh total', 'Tecnología: Li-Ion LFP (4 módulos)', '>3.000 ciclos de vida', 'DoD máximo: 80% · BMS térmico', 'Autonomía ~4 h · SCADA integrado'] },
+    grid:        { title: '🌐 Red Pública AIRE',            color: '#3b82f6', specs: ['Tensión: 220/440 V AC · 60 Hz', 'Postes AIRE (Barranquilla)', 'Net metering activo', 'Reconexión automática', 'Protecciones TVSS + OCPD'] },
+    inverter:    { title: '⚡ Inversores Híbridos',         color: '#34d399', specs: ['Potencia: 2 × 125 kVA = 250 kVA', 'Tipo: híbrido DC/AC', 'MPPT eficiencia: 98.5%', 'Protección IP65', 'Comunicación RS485 / Modbus'] },
     scada:       { title: '📡 SCADA / Sistema de Control',  color: '#60a5fa', specs: ['Monitoreo en tiempo real', 'Alarmas automáticas', 'Dashboard gerencial web', 'API REST integrada a Python', 'Historial de datos 10 años'] },
     uci:         { title: '❤️ UCI',                         color: '#ef4444', specs: ['Prioridad: CRÍTICA', 'Carga estimada: 45 kW', 'UPS respaldo: 15 min', 'Sin interrupción tolerada', 'Monitoreo vital continuo 24/7'] },
     quirofanos:  { title: '🔪 Quirófanos',                 color: '#ef4444', specs: ['Prioridad: CRÍTICA', 'Carga estimada: 60 kW', 'Luminarias quirúrgicas', 'Equipos electroquirúrgicos', 'HVAC con filtración HEPA'] },
@@ -111,7 +112,7 @@ function EnergyFlowSVG() {
 
         {/* ── Source nodes ── */}
         {mkNode('solar',   8, 22,  178, 100, '☀️ Paneles FV',    '~250 kWp · 500 m²',        '5.39 kWh/m²/d · BQ')}
-        {mkNode('battery', 8, 152, 178, 85,  '🔋 Banco Baterías','200 kWh · Li-Ion LFP',     'Autonomía ~4 h')}
+        {mkNode('battery', 8, 152, 178, 85,  '🔋 Banco Baterías','300 kWh · LFP (4 módulos)','Autonomía ~4 h · SCADA')}
         {mkNode('grid',    8, 262, 178, 60,  '🌐 Red Pública',   '220/440 V · Net metering',  null)}
 
         {/* DC/AC flows from sources → inversor */}
@@ -259,6 +260,7 @@ function Reveal({ children, direction = 'up', delay = 0, className = '' }) {
     up: 'reveal-up',
     left: 'reveal-left',
     right: 'reveal-right',
+    slideRotate: 'reveal-slide-rotate',
   }[direction];
   return (
     <div
@@ -276,6 +278,7 @@ function Navbar() {
   const links = [
     { href: '#vision', label: 'Visión' },
     { href: '#ecosistema', label: 'Ecosistema' },
+    { href: '#hospital3d', label: 'Vista 3D' },
     { href: '#datos', label: 'Solar BQ' },
     { href: '#retos', label: 'Retos' },
     { href: '#impacto', label: 'Impacto' },
@@ -514,12 +517,12 @@ function VisionSlide() {
 ════════════════════════════════════════════ */
 function EcosistemaSlide() {
   const areas = [
-    { name: 'UCI', desc: 'Monitoreo vital continuo 24/7', icon: '❤️', priority: 'Crítica' },
-    { name: 'Farmacia', desc: 'Cadena de frío de vacunas', icon: '💊', priority: 'Esencial' },
-    { name: 'Data Center', desc: 'Servidores e historias clínicas', icon: '🖥️', priority: 'Crítica' },
-    { name: 'Quirófanos', desc: 'Iluminación y equipos quirúrgicos', icon: '🔪', priority: 'Crítica' },
-    { name: 'Iluminación', desc: 'Pasillos y zonas de emergencia', icon: '💡', priority: 'Básica' },
-    { name: 'HVAC', desc: 'Climatización de áreas especiales', icon: '🌡️', priority: 'Esencial' },
+    { name: 'UCI',         desc: 'Monitoreo vital continuo 24/7',  icon: '❤️',  priority: 'Crítica',  kw: 45,  backup: '15 min UPS',   uptime: 99.9 },
+    { name: 'Farmacia',    desc: 'Cadena de frío 2–8 °C',          icon: '💊',  priority: 'Esencial', kw: 18,  backup: '8 min UPS',    uptime: 98.5 },
+    { name: 'Data Center', desc: 'Servidores HIS/LIS',              icon: '🖥️', priority: 'Crítica',  kw: 22,  backup: '30 min UPS',   uptime: 99.5 },
+    { name: 'Quirófanos',  desc: 'Iluminación y equipo quirúrgico', icon: '🔪', priority: 'Crítica',  kw: 60,  backup: '10 min UPS',   uptime: 99.7 },
+    { name: 'Pasillos',    desc: 'Pasillos y zonas de salida',      icon: '💡',  priority: 'Básica',   kw: 35,  backup: 'Solar directo', uptime: 95.0 },
+    { name: 'HVAC',        desc: 'Climatización HEPA',              icon: '🌡️', priority: 'Esencial', kw: 70,  backup: '5 min UPS',    uptime: 97.2 },
   ];
 
   return (
@@ -550,26 +553,43 @@ function EcosistemaSlide() {
         </div>
       </Reveal>
 
-      {/* Critical Areas Grid */}
+      {/* Critical Areas Grid — slide-rotate-hor-b-fwd (Animista) */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {areas.map((area, i) => (
-          <Reveal key={area.name} delay={i * 100}>
-            <div className="group bg-medical-blue-900/60 hover:bg-medical-blue-800/60 border border-medical-blue-700/40 hover:border-energy-green-500/50 rounded-xl p-4 transition-all duration-300 cursor-pointer">
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-2xl">{area.icon}</span>
+          <Reveal key={area.name} delay={i * 130} direction="slideRotate">
+            <div className="group relative bg-medical-blue-900/60 hover:bg-medical-blue-800/60 border border-medical-blue-700/40 hover:border-energy-green-500/50 rounded-xl p-4 transition-all duration-300 cursor-pointer overflow-hidden">
+              {/* Hover radial glow */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl pointer-events-none"
+                style={{ background: 'radial-gradient(circle at 50% 30%, rgba(52,211,153,0.10), transparent 72%)' }} />
+              {/* Header row */}
+              <div className="flex items-start justify-between mb-2 relative">
+                <span className="text-2xl drop-shadow-lg">{area.icon}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                  area.priority === 'Crítica'
-                    ? 'bg-red-500/20 text-red-300'
-                    : area.priority === 'Esencial'
-                    ? 'bg-yellow-500/20 text-yellow-300'
-                    : 'bg-blue-500/20 text-blue-300'
-                }`}>
-                  {area.priority}
-                </span>
+                  area.priority === 'Crítica'  ? 'bg-red-500/20 text-red-300' :
+                  area.priority === 'Esencial' ? 'bg-yellow-500/20 text-yellow-300' :
+                                                 'bg-blue-500/20 text-blue-300'
+                }`}>{area.priority}</span>
               </div>
-              <h4 className="font-bold text-white group-hover:text-energy-green-300 transition-colors">{area.name}</h4>
-              <p className="text-medical-blue-300 text-xs mt-1">{area.desc}</p>
-              <div className="mt-3 w-full h-1 rounded-full bg-medical-blue-800 overflow-hidden">
+              <h4 className="font-bold text-white group-hover:text-energy-green-300 transition-colors relative">{area.name}</h4>
+              <p className="text-medical-blue-300 text-xs mt-1 relative">{area.desc}</p>
+              {/* Métricas operativas */}
+              <div className="mt-3 flex items-center justify-between text-xs relative">
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-energy-green-400 animate-pulse-slow" />
+                  <span className="text-energy-green-400 font-bold">{area.kw} kW</span>
+                </div>
+                <span className="text-medical-blue-400">{area.backup}</span>
+              </div>
+              {/* Uptime */}
+              <div className="mt-1 flex items-center justify-between text-xs relative">
+                <span className="text-medical-blue-500">uptime</span>
+                <span className={`font-semibold ${
+                  area.uptime >= 99 ? 'text-energy-green-400' :
+                  area.uptime >= 97 ? 'text-yellow-400' : 'text-orange-400'
+                }`}>{area.uptime}%</span>
+              </div>
+              {/* Barra de prioridad */}
+              <div className="mt-2 w-full h-1 rounded-full bg-medical-blue-800 overflow-hidden relative">
                 <div className="h-full bg-gradient-to-r from-energy-green-500 to-medical-blue-400 animate-pulse-slow"
                   style={{ width: area.priority === 'Crítica' ? '90%' : area.priority === 'Esencial' ? '70%' : '50%' }} />
               </div>
@@ -577,6 +597,637 @@ function EcosistemaSlide() {
           </Reveal>
         ))}
       </div>
+    </Section>
+  );
+}
+
+/* ════════════════════════════════════════════
+   SLIDE 3’ — ESCENA ISOMÉTRICA 3D DEL HOSPITAL
+════════════════════════════════════════════ */
+
+/* Escena isométrica SVG del hospital con paneles y zonas críticas */
+function HospitalIsoScene({ externalFilter }) {
+  const [hoveredZone, setHoveredZone] = useState(null);
+  // externalFilter puede ser: 'CRÍTICA'|'ESENCIAL'|'BÁSICA'|'batteries'|zone.key|null
+  const activeFilter = externalFilter ?? null;
+
+  // Proyección isométrica
+  const iso = (X, Y, Z) => ({
+    x: (X - Y) * 2.2,
+    y: (X + Y) * 1.1 - Z * 1.8,
+  });
+
+  // isoBox helper
+  const isoBox = (bx, by, bz, w, d, h, colorTop, colorRight, colorLeft, opacity = 1) => {
+    const A = iso(bx,     by,     bz + h), B = iso(bx + w, by,     bz + h);
+    const C = iso(bx + w, by + d, bz + h), D = iso(bx,     by + d, bz + h);
+    const E = iso(bx,     by,     bz),     F = iso(bx + w, by,     bz);
+    const G = iso(bx + w, by + d, bz),     H2= iso(bx,     by + d, bz);
+    const pt = (p) => `${p.x},${p.y}`;
+    return (
+      <g opacity={opacity}>
+        <polygon points={`${pt(A)} ${pt(B)} ${pt(C)} ${pt(D)}`} fill={colorTop}   stroke="#0c1a3e" strokeWidth="0.6" />
+        <polygon points={`${pt(B)} ${pt(C)} ${pt(G)} ${pt(F)}`} fill={colorRight} stroke="#0c1a3e" strokeWidth="0.6" />
+        <polygon points={`${pt(A)} ${pt(D)} ${pt(H2)} ${pt(E)}`} fill={colorLeft} stroke="#0c1a3e" strokeWidth="0.6" />
+      </g>
+    );
+  };
+
+  const isoWindowRight = (bx, by, bz, w, d, h, wox, woy, ww, wh) => {
+    const toRight = (lx, lz) => iso(bx + w, by + lx, bz + lz);
+    const pts = [toRight(wox, woy), toRight(wox+ww, woy), toRight(wox+ww, woy+wh), toRight(wox, woy+wh)];
+    return <polygon points={pts.map(p=>`${p.x},${p.y}`).join(' ')}
+      fill="#bfdbfe" opacity="0.55" stroke="#1e3a8a" strokeWidth="0.5" />;
+  };
+
+  const solarPanel = (bx, by, bz, w, d) => {
+    const A = iso(bx, by, bz), B = iso(bx+w, by, bz);
+    const C = iso(bx+w, by+d, bz), D = iso(bx, by+d, bz);
+    const pt = (p) => `${p.x},${p.y}`;
+    const cx = (A.x+B.x+C.x+D.x)/4, cy = (A.y+B.y+C.y+D.y)/4;
+    return (
+      <g>
+        <polygon points={`${pt(A)} ${pt(B)} ${pt(C)} ${pt(D)}`} fill="#1e3a8a" stroke="#34d399" strokeWidth="1.2" />
+        <line x1={A.x+(B.x-A.x)*.33} y1={A.y+(B.y-A.y)*.33} x2={D.x+(C.x-D.x)*.33} y2={D.y+(C.y-D.y)*.33} stroke="#34d399" strokeWidth="0.5" opacity="0.7" />
+        <line x1={A.x+(B.x-A.x)*.66} y1={A.y+(B.y-A.y)*.66} x2={D.x+(C.x-D.x)*.66} y2={D.y+(C.y-D.y)*.66} stroke="#34d399" strokeWidth="0.5" opacity="0.7" />
+        <line x1={A.x+(D.x-A.x)*.5} y1={A.y+(D.y-A.y)*.5} x2={B.x+(C.x-B.x)*.5} y2={B.y+(C.y-B.y)*.5} stroke="#34d399" strokeWidth="0.5" opacity="0.7" />
+        <ellipse cx={cx} cy={cy} rx="5" ry="3" fill="#7dd3fc" opacity="0.25" />
+      </g>
+    );
+  };
+
+  const energyLine = (from3d, to3d, color, dur, begin, key) => {
+    const f = iso(...from3d), t = iso(...to3d);
+    const pathD = `M ${f.x} ${f.y} L ${t.x} ${t.y}`;
+    return (
+      <g key={key}>
+        <path d={pathD} stroke={color} strokeWidth="1.6" fill="none" strokeDasharray="9 5" opacity="0.65">
+          <animate attributeName="stroke-dashoffset" values="0;-28" dur={dur} repeatCount="indefinite" begin={begin} />
+        </path>
+        <circle r="4.5" fill={color} opacity="0.9">
+          <animateMotion dur={dur} repeatCount="indefinite" begin={begin} path={pathD} />
+        </circle>
+      </g>
+    );
+  };
+
+  // ── LAYOUT 3D  ──────────────────────────────────────────────
+  // Hospital: bx 0-36, by 4-22, bz 0-36
+  // Left zones (UCI/Farm): bx -46..-34, by 4..18
+  // Right zones (Quiro/DC): bx 52..64, by 4..18
+  // Front zone (Pasillos): bx 8..22, by -34..-24
+  // Back zone (HVAC): bx 8..22, by 52..62
+  // Subestación: bx 52..76, by 30..50  (frente-derecha, SIN zonas ahí)
+  // Postes AIRE: bx -20..-6, by -30..-20 (frente-izquierda)
+  // ────────────────────────────────────────────────────────────
+
+  const zones = [
+    { key:'uci',         label:'UCI',         icon:'❤️',  color:'#ef4444', priority:'CRÍTICA',
+      bx:-46, by:4,  bz:8,  w:12, d:10, h:9,
+      from3d:[0,9,12.5], to3d:[-34,9,12.5],
+      floor:'Piso 1', floorColor:'#34d399'  },
+    { key:'farmacia',    label:'Farmacia',    icon:'💊',  color:'#f59e0b', priority:'ESENCIAL',
+      bx:-46, by:18, bz:0,  w:12, d:10, h:6,
+      from3d:[0,20,3], to3d:[-34,20,3],
+      floor:'P. Baja', floorColor:'#94a3b8' },
+    { key:'quirofanos',  label:'Quirófanos',  icon:'🔪',  color:'#f87171', priority:'CRÍTICA',
+      bx:52,  by:4,  bz:8,  w:12, d:10, h:9,
+      from3d:[36,9,12.5], to3d:[52,9,12.5],
+      floor:'Piso 1', floorColor:'#34d399'  },
+    { key:'datacenter',  label:'Data Center', icon:'🖥️', color:'#6366f1', priority:'CRÍTICA',
+      bx:52,  by:18, bz:16, w:12, d:10, h:8,
+      from3d:[36,20,20], to3d:[52,20,20],
+      floor:'Piso 2', floorColor:'#818cf8'  },
+    { key:'iluminacion', label:'Pasillos',    icon:'💡',  color:'#3b82f6', priority:'BÁSICA',
+      bx:8,   by:-34, bz:0, w:14, d:10, h:5,
+      from3d:[20,4,3], to3d:[20,-24,3],
+      floor:'P. Baja', floorColor:'#94a3b8' },
+    { key:'hvac',        label:'HVAC',        icon:'🌡️', color:'#10b981', priority:'ESENCIAL',
+      bx:8,   by:52, bz:0,  w:14, d:10, h:6,
+      from3d:[20,22,3], to3d:[20,52,3],
+      floor:'P. Baja', floorColor:'#94a3b8' },
+  ];
+
+  const zoneDetails = {
+    uci:         { kw:45,  uptime:'99.9%', backup:'15 min UPS', priority:'CRÍTICA',  desc:'Monitoreo vital continuo 24/7' },
+    quirofanos:  { kw:60,  uptime:'99.7%', backup:'10 min UPS', priority:'CRÍTICA',  desc:'Iluminación y equipo quirúrgico' },
+    farmacia:    { kw:18,  uptime:'98.5%', backup:'8 min UPS',  priority:'ESENCIAL', desc:'Cadena de frío 2–8 °C' },
+    datacenter:  { kw:22,  uptime:'99.5%', backup:'30 min UPS', priority:'CRÍTICA',  desc:'Servidores HIS/LIS' },
+    iluminacion: { kw:35,  uptime:'95.0%', backup:'Solar dir.', priority:'BÁSICA',   desc:'Pasillos y zonas de salida' },
+    hvac:        { kw:70,  uptime:'97.2%', backup:'5 min UPS',  priority:'ESENCIAL', desc:'Climatización HEPA' },
+  };
+
+  // Equipos de subestación (para zoom de categoría 'batteries')
+  const substCenter3d = [62, 40, 5]; // centro isométrico de la subestación
+
+  // ── Filtro: qué zonas están activas ──
+  const isZoneActive = (z) => {
+    if (!activeFilter) return true;
+    if (activeFilter === 'batteries') return false;
+    if (activeFilter === 'CRÍTICA' || activeFilter === 'ESENCIAL' || activeFilter === 'BÁSICA')
+      return z.priority === activeFilter;
+    return z.key === activeFilter;
+  };
+  const anyActive = (zList) => zList.some(z => isZoneActive(z));
+
+  // Zoom origin: cuando hay filtro, apunta al centro geométrico de las zonas activas
+  const computeZoomOrigin = () => {
+    const OX = 530, OY = 420;
+    const VW = 1060, VH = 580;
+    if (activeFilter === 'batteries') {
+      const c = iso(...substCenter3d);
+      return { px: Math.max(5,Math.min(92,((OX+c.x)/VW)*100)), py: Math.max(5,Math.min(92,((OY+c.y)/VH)*100)) };
+    }
+    if (hoveredZone) {
+      const z = zones.find(z=>z.key===hoveredZone);
+      if (z) {
+        const c = iso(z.bx+z.w/2, z.by+z.d/2, z.bz+z.h/2);
+        return { px: Math.max(5,Math.min(92,((OX+c.x)/VW)*100)), py: Math.max(5,Math.min(92,((OY+c.y)/VH)*100)) };
+      }
+    }
+    if (activeFilter && activeFilter !== 'batteries') {
+      const active = zones.filter(z => isZoneActive(z));
+      if (active.length === 0) return { px:48, py:50 };
+      let sx=0, sy=0;
+      active.forEach(z => {
+        const c = iso(z.bx+z.w/2, z.by+z.d/2, z.bz+z.h/2);
+        sx += (OX+c.x)/VW*100; sy += (OY+c.y)/VH*100;
+      });
+      return { px: Math.max(5,Math.min(92,sx/active.length)), py: Math.max(5,Math.min(92,sy/active.length)) };
+    }
+    return { px:48, py:50 };
+  };
+
+  const zoomOrigin   = computeZoomOrigin();
+  const isZoomed     = !!(activeFilter || hoveredZone);
+  const zoomScale    = activeFilter === 'batteries' ? 2.2
+                     : (activeFilter && ['CRÍTICA','ESENCIAL','BÁSICA'].includes(activeFilter)) ? 1.75
+                     : hoveredZone ? 1.9 : 1.0;
+  const OX = 530, OY = 420;
+
+  return (
+    <div className="relative w-full overflow-hidden">
+      <div style={{
+        transform: isZoomed ? `scale(${zoomScale})` : 'scale(1.0)',
+        transformOrigin: `${zoomOrigin.px}% ${zoomOrigin.py}%`,
+        transition: 'transform 0.5s cubic-bezier(0.165,0.84,0.44,1)',
+        willChange: 'transform',
+      }}>
+        <svg viewBox="100 160 900 450"
+          className="w-full"
+          style={{ filter:'drop-shadow(0 8px 40px #000b)', display:'block' }}
+        >
+          <defs>
+            <filter id="glowStrong">
+              <feGaussianBlur stdDeviation="5" result="cb" />
+              <feMerge><feMergeNode in="cb" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="glowSoft">
+              <feGaussianBlur stdDeviation="2.5" result="cb" />
+              <feMerge><feMergeNode in="cb" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          <g transform={`translate(${OX} ${OY})`}>
+
+            {/* ── SUELO — tiles cubriendo toda la escena ── */}
+            {[...Array(16)].map((_,xi) =>
+              [...Array(14)].map((_,yi) => {
+                const bx = (xi-6)*8, by = (yi-6)*8;
+                const corners = [iso(bx,by,0),iso(bx+8,by,0),iso(bx+8,by+8,0),iso(bx,by+8,0)];
+                return <polygon key={`t${xi}-${yi}`}
+                  points={corners.map(p=>`${p.x},${p.y}`).join(' ')}
+                  fill="#0c1a3e" stroke="#1e3a8a" strokeWidth="0.4" opacity="0.6" />;
+              })
+            )}
+
+            {/* ── HOSPITAL — estructura por plantas ── */}
+            {isoBox(0,4,0,36,18,1,'#0f2044','#0a1830','#0d1e38')}
+            {isoBox(0,4,1,36,18,7,'#162a52','#0e2040','#12254a')}
+            {isoBox(2,5,8,32,16,8,'#1a3060','#112245','#152850')}
+            {isoBox(4,6,16,28,14,8,'#1e3570','#142848','#182e58')}
+            {isoBox(13,9,24,12,8,12,'#1e3a8a','#162e6e','#1a3478')}
+            {isoBox(13,9,36,12,8,2,'#162e6e','#0e2254','#12285e')}
+            {isoBox(-9,6,0,10,14,6,'#122044','#0c1a38','#101e40')}
+            {isoBox(37,6,0,10,14,6,'#122044','#0c1a38','#101e40')}
+            {/* Líneas de plantas */}
+            {[{bz:8,c:'#34d399',l:'Piso 1'},{bz:16,c:'#818cf8',l:'Piso 2'},{bz:24,c:'#60a5fa',l:'Torre'}].map(({bz,c,l})=>{
+              const pA=iso(36,4,bz), pB=iso(36,22,bz), lp=iso(36,4,bz-4);
+              return <g key={`fl${bz}`}><line x1={pA.x} y1={pA.y} x2={pB.x} y2={pB.y} stroke={c} strokeWidth="1.8" opacity="0.55" strokeDasharray="5 3"/><text x={lp.x+4} y={lp.y} fill={c} fontSize="6.5" fontWeight="bold" opacity="0.85">{l}</text></g>;
+            })}
+            {(() => { const p=iso(0,4,4); return <text x={p.x-6} y={p.y} textAnchor="end" fill="#94a3b8" fontSize="6.5" fontWeight="bold" opacity="0.85">P. Baja</text>; })()}
+            {/* Ventanas */}
+            {[2,6,10,14].map(woy=>[1,4].map(woz=><g key={`wg${woy}${woz}`}>{isoWindowRight(0,4,0,36,18,8,woy,woz,3,2.5)}</g>))}
+            {[2,6,10].map(woy=>[1,4].map(woz=><g key={`w1${woy}${woz}`}>{isoWindowRight(2,5,8,32,16,8,woy,woz,3,2.5)}</g>))}
+            {[2,6].map(woy=>[1].map(woz=><g key={`w2${woy}${woz}`}>{isoWindowRight(4,6,16,28,14,8,woy,woz,3,2.5)}</g>))}
+            {/* Cruz + Helipuerto */}
+            {(() => { const cH=isoWindowRight(13,9,30,1,8,10,2.5,3,2,3.5); const cV=isoWindowRight(13,9,30,1,8,10,3.5,2,1,5.5); return <g filter="url(#glowSoft)" opacity="0.9">{cH}{cV}</g>; })()}
+            {(() => { const c=iso(19,13,38.5); return <g transform={`translate(${c.x} ${c.y})`} opacity="0.85"><ellipse rx={24} ry={11} fill="none" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4 3"/><text textAnchor="middle" dy="4" fill="#fbbf24" fontSize="14" fontWeight="bold" fontFamily="Arial">H</text></g>; })()}
+            {/* Paneles solares */}
+            {[0,5,10,15,20].map(px=>solarPanel(px+5,7,24,4,12))}
+            {[0,4].map(px=>solarPanel(px+14,10,36,3,6))}
+
+            {/* ── PUENTES — nivel de planta ── */}
+            {isoBox(-34,8,8,14,3,0.9,'#ef444428','#ef444418','#ef44441e')}
+            {isoBox(-34,19,0,14,3,0.9,'#f59e0b28','#f59e0b18','#f59e0b1e')}
+            {isoBox(36,8,8,16,3,0.9,'#f8717128','#f8717118','#f871711e')}
+            {isoBox(36,19,16,16,3,0.9,'#6366f128','#6366f118','#6366f11e')}
+            {isoBox(19,-24,0,2,28,0.9,'#3b82f628','#3b82f618','#3b82f61e')}
+            {isoBox(19,22,0,2,30,0.9,'#10b98128','#10b98118','#10b9811e')}
+
+            {/* ── SOL ANIMADO ── */}
+            {(() => {
+              const sc=iso(58,-16,50);
+              return (
+                <g transform={`translate(${sc.x} ${sc.y})`}>
+                  <circle r="52" fill="#f59e0b" opacity="0.04"><animate attributeName="r" values="52;62;52" dur="3s" repeatCount="indefinite"/></circle>
+                  <circle r="36" fill="#f59e0b" opacity="0.08"><animate attributeName="r" values="36;44;36" dur="2.5s" repeatCount="indefinite"/></circle>
+                  <g>
+                    <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="20s" repeatCount="indefinite"/>
+                    {Array.from({length:20},(_,k)=>{ const a=(k*18)*Math.PI/180,r1=24,r2=k%5===0?60:k%2===0?50:40,sw=k%5===0?2.5:k%2===0?1.5:0.8,op=k%5===0?0.85:0.45; return <line key={k} x1={r1*Math.cos(a)} y1={r1*Math.sin(a)} x2={r2*Math.cos(a)} y2={r2*Math.sin(a)} stroke="#fbbf24" strokeWidth={sw} opacity={op}/>; })}
+                  </g>
+                  <circle r="21" fill="#f97316" opacity="0.95" filter="url(#glowStrong)"/>
+                  <circle r="14" fill="#fed7aa"/>
+                  <circle r="8" fill="#fef3c7"/>
+                  <text y="40" textAnchor="middle" fill="#fde68a" fontSize="7" fontWeight="bold" opacity="0.9">5.39 kWh/m²/d</text>
+                </g>
+              );
+            })()}
+            {[0,5,10,15,20].map((px,k)=>{ const pc=iso(px+7,13,24),sp=iso(58,-16,50); return <line key={`sr${k}`} x1={sp.x} y1={sp.y} x2={pc.x} y2={pc.y} stroke="#fbbf24" strokeWidth="0.8" opacity="0.15" strokeDasharray="8 5"><animate attributeName="opacity" values="0.08;0.22;0.08" dur={`${1.8+k*.22}s`} repeatCount="indefinite" begin={`${k*.3}s`}/></line>; })}
+
+            {/* ══════════════════════════════════════════
+                SUBESTACIÓN  — frente-derecha (bx 52-76, by 28-50)
+                Separada de todas las zonas hospitalarias
+                ══════════════════════════════════════════ */}
+            {isoBox(52,28,0,26,22,0.8,'#0d1e3e','#0a1830','#0b1c38')}
+            {/* Baterías 2×2 */}
+            {isoBox(54,30,0.8,5,6,6,'#1d4e89','#153a6a','#16447a')}
+            {isoBox(54,30,6.8,5,6,0.8,'#2563eb','#1d4ed8','#2056c8')}
+            {isoBox(61,30,0.8,5,6,6,'#1d4e89','#153a6a','#16447a')}
+            {isoBox(61,30,6.8,5,6,0.8,'#2563eb','#1d4ed8','#2056c8')}
+            {isoBox(54,38,0.8,5,6,6,'#1d4e89','#153a6a','#16447a')}
+            {isoBox(54,38,6.8,5,6,0.8,'#1d4ed8','#1a40c0','#1946b8')}
+            {isoBox(61,38,0.8,5,6,6,'#1d4e89','#153a6a','#16447a')}
+            {isoBox(61,38,6.8,5,6,0.8,'#1d4ed8','#1a40c0','#1946b8')}
+            {/* LED baterías pulsantes */}
+            {[30,30,38,38].map((by,k)=>{
+              const bx=[54,61,54,61][k];
+              const p=iso(bx+2.5,by+3,7.8);
+              return <circle key={`batled${k}`} cx={p.x} cy={p.y} r="2.5" fill="#34d399" opacity="0.9">
+                <animate attributeName="opacity" values="0.9;0.2;0.9" dur={`${1.2+k*.3}s`} repeatCount="indefinite"/>
+              </circle>;
+            })}
+            {/* Etiquetas baterías */}
+            {[{bx:54,by:30},{bx:61,by:30},{bx:54,by:38},{bx:61,by:38}].map(({bx,by},k)=>{
+              const p=iso(bx+2.5,by+3,9); return <text key={`batl${k}`} x={p.x} y={p.y} textAnchor="middle" fill="#93c5fd" fontSize="5" fontWeight="bold">🔋{k<2?'100':' 50'}kWh</text>;
+            })}
+            {(() => { const p=iso(60,32,10.5); return <text x={p.x} y={p.y} textAnchor="middle" fill="#60a5fa" fontSize="6.5" fontWeight="bold">BANCO LFP 300kWh</text>; })()}
+            {/* Inversores ×2 */}
+            {isoBox(68,30,0.8,5,5,8,'#4c1d95','#3b1578','#440d85')}
+            {isoBox(68,30,8.8,5,5,1,'#7c3aed','#5b21b6','#6d28d9')}
+            {isoBox(68,38,0.8,5,5,8,'#4c1d95','#3b1578','#440d85')}
+            {isoBox(68,38,8.8,5,5,1,'#7c3aed','#5b21b6','#6d28d9')}
+            {/* LEDs inversores */}
+            {[[68,30],[68,38]].map(([bx,by],k)=>{
+              const p=iso(bx+2.5,by+2.5,5);
+              return <g key={`invled${k}`}>
+                <circle cx={p.x-4} cy={p.y} r="2.2" fill="#34d399" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur={`${1.2+k*.4}s`} repeatCount="indefinite"/></circle>
+                <circle cx={p.x+2} cy={p.y} r="2.2" fill="#fbbf24" opacity="0.85"><animate attributeName="opacity" values="0.85;0.4;0.85" dur={`${1.8+k*.3}s`} repeatCount="indefinite" begin={`${k*.5}s`}/></circle>
+              </g>;
+            })}
+            {(() => { const p=iso(70.5,37,11); return <text x={p.x} y={p.y} textAnchor="middle" fill="#c084fc" fontSize="6" fontWeight="bold">⚡INV-1 125kVA</text>; })()}
+            {(() => { const p=iso(70.5,46,11); return <text x={p.x} y={p.y} textAnchor="middle" fill="#c084fc" fontSize="6" fontWeight="bold">⚡INV-2 125kVA</text>; })()}
+            {/* SCADA */}
+            {isoBox(54,44,0.8,4,6,7,'#164e63','#0e3a50','#12435c')}
+            {isoBox(54,44,7.8,4,6,1,'#0ea5e9','#0284c7','#0891b2')}
+            {(() => {
+              const sc=iso(56,47,5);
+              return <g>
+                <rect x={sc.x-9} y={sc.y-5} width="18" height="11" rx="1.5" fill="#0c2a40" stroke="#0ea5e9" strokeWidth="0.8"/>
+                <polyline points={`${sc.x-7},${sc.y+2} ${sc.x-4},${sc.y-2} ${sc.x-1},${sc.y+1} ${sc.x+2},${sc.y-3} ${sc.x+5},${sc.y}`} fill="none" stroke="#34d399" strokeWidth="1"/>
+              </g>;
+            })()}
+            {(() => { const p=iso(56,47,9.5); return <text x={p.x} y={p.y} textAnchor="middle" fill="#38bdf8" fontSize="5.8" fontWeight="bold">📡 SCADA</text>; })()}
+            {/* Bus AC subestación → hospital */}
+            {(() => {
+              const sub=iso(68,35,4), hosp=iso(36,14,4);
+              const pathD=`M ${sub.x} ${sub.y} L ${hosp.x} ${hosp.y}`;
+              return <g>
+                <path d={pathD} stroke="#34d399" strokeWidth="2.5" fill="none" strokeDasharray="10 4" opacity="0.7"/>
+                <circle r="4" fill="#34d399" opacity="0.9"><animateMotion dur="1.8s" repeatCount="indefinite" path={pathD}/></circle>
+              </g>;
+            })()}
+
+            {/* ══════════════════════════════════════════
+                POSTES AIRE (empresa eléctrica Barranquilla)
+                Frente-izquierda: bx -20..-4, by -34..-20
+                ══════════════════════════════════════════ */}
+            {/* 3 postes alineados */}
+            {[[-18,-28],[-10,-28],[-2,-28]].map(([pbx,pby],pi)=>{
+              const base=iso(pbx+1,pby+1,0.8);
+              const top =iso(pbx+1,pby+1,22);
+              const armL=iso(pbx-2,pby+1,22);
+              const armR=iso(pbx+4,pby+1,22);
+              const armM=iso(pbx+1,pby+1,22);
+              return (
+                <g key={`pole${pi}`}>
+                  {isoBox(pbx,pby,0,2,2,1,'#334155','#1e293b','#263044')}
+                  <line x1={base.x} y1={base.y} x2={top.x} y2={top.y} stroke="#64748b" strokeWidth="2.8"/>
+                  {/* Brazo cruzado */}
+                  <line x1={armL.x} y1={armL.y} x2={armR.x} y2={armR.y} stroke="#64748b" strokeWidth="2"/>
+                  {/* 3 aisladores por poste */}
+                  {[-2,1,4].map((ox,ii)=>{
+                    const ap=iso(pbx+ox,pby+1,22);
+                    return <g key={`ins${pi}-${ii}`}>
+                      <circle cx={ap.x} cy={ap.y+5} r="2.8" fill="none" stroke="#94a3b8" strokeWidth="1"/>
+                      <circle cx={ap.x} cy={ap.y+11} r="2.8" fill="none" stroke="#94a3b8" strokeWidth="1"/>
+                      <line x1={ap.x} y1={ap.y} x2={ap.x} y2={ap.y+14} stroke="#94a3b8" strokeWidth="0.8"/>
+                    </g>;
+                  })}
+                  {/* Cable aéreo entre postes */}
+                  {pi<2 && (() => {
+                    const nx=iso([-10,-2][pi]+1,pby+1,22);
+                    return <path d={`M ${armM.x} ${armM.y} Q ${(armM.x+nx.x)/2} ${Math.max(armM.y,nx.y)+8} ${nx.x} ${nx.y}`}
+                      stroke="#64748b" strokeWidth="1.2" fill="none" opacity="0.7"/>;
+                  })()}
+                </g>
+              );
+            })}
+            {/* Etiqueta AIRE */}
+            {(() => { const p=iso(-10,-30,24); return <text x={p.x} y={p.y-8} textAnchor="middle" fill="#94a3b8" fontSize="7" fontWeight="bold">🌐 AIRE 220V/60Hz</text>; })()}
+            {/* Cable AIRE → subestación */}
+            {(() => {
+              const pole=iso(-2,-27,12);
+              const sub =iso(54,44,4);
+              const mx=(pole.x+sub.x)/2, my=Math.min(pole.y,sub.y)-30;
+              const pathD=`M ${pole.x} ${pole.y} Q ${mx} ${my} ${sub.x} ${sub.y}`;
+              return <g>
+                <path d={pathD} stroke="#3b82f6" strokeWidth="1.5" fill="none" strokeDasharray="10 5" opacity="0.65">
+                  <animate attributeName="stroke-dashoffset" values="0;-30" dur="2.2s" repeatCount="indefinite"/>
+                </path>
+                <circle r="3.5" fill="#3b82f6" opacity="0.9"><animateMotion dur="2.2s" repeatCount="indefinite" path={pathD}/></circle>
+              </g>;
+            })()}
+
+            {/* ── ZONAS CRÍTICAS ── */}
+            {zones.map((z)=>{
+              const isHov = hoveredZone===z.key;
+              const isAct = isZoneActive(z);
+              const opacity= (hoveredZone && !isHov && !activeFilter) ? 0.35
+                           : (!isAct && activeFilter) ? 0.18 : 1;
+              const topC  = isHov||isAct ? z.color+'cc' : z.color+'55';
+              const rightC= isHov||isAct ? z.color+'88' : z.color+'2a';
+              const leftC = isHov||isAct ? z.color+'99' : z.color+'3e';
+              return (
+                <g key={z.key} opacity={opacity}
+                  style={{cursor:'pointer',transition:'opacity 0.25s'}}
+                  onMouseEnter={()=>setHoveredZone(z.key)}
+                  onMouseLeave={()=>setHoveredZone(null)}>
+                  {isoBox(z.bx,z.by,z.bz,z.w,z.d,0.8,'#0b1836','#0a1630','#0c1838')}
+                  {isoBox(z.bx,z.by,z.bz,z.w,z.d,z.h,topC,rightC,leftC)}
+                  {isHov&&(()=>{ const p=iso(z.bx+z.w/2,z.by+z.d/2,z.bz+z.h/2); return <circle cx={p.x} cy={p.y} r={38} fill={z.color} opacity="0.10" filter="url(#glowStrong)"/>; })()}
+                  {(()=>{
+                    const c=iso(z.bx+z.w/2,z.by+z.d/2,z.bz+z.h+1.8);
+                    return <g>
+                      <text x={c.x} y={c.y-5} textAnchor="middle" fill="white" fontSize={isHov?'13':'11'} style={{transition:'font-size 0.2s'}}>{z.icon}</text>
+                      <text x={c.x} y={c.y+8} textAnchor="middle" fill={isHov?z.color:'white'} fontSize="7.5" fontWeight="bold" style={{transition:'fill 0.2s'}}>{z.label}</text>
+                      <text x={c.x} y={c.y+19} textAnchor="middle" fill={z.floorColor} fontSize="5.8" fontWeight="bold" opacity={isHov?1:0.7}>{z.floor}</text>
+                    </g>;
+                  })()}
+                </g>
+              );
+            })}
+            {/* Cables energía */}
+            {zones.map((z,k)=>energyLine(z.from3d,z.to3d,z.color,`${1.8+k*.2}s`,`${k*.3}s`,`cable-${z.key}`))}
+          </g>
+        </svg>
+      </div>{/* /zoom-layer */}
+
+      {/* ── TOOLTIPS unificados: hover > filtro zona > filtro categoría > subestación ── */}
+      {(()=>{
+        // Determinar qué clave mostrar
+        const isZoneKey = (k) => zones.some(z=>z.key===k);
+        const tipKey = hoveredZone || (!hoveredZone && activeFilter && isZoneKey(activeFilter) ? activeFilter : null);
+
+        // 1 ── Zona individual (hover O filtro de zona)
+        if (tipKey) {
+          const z = zones.find(zz=>zz.key===tipKey);
+          const d = zoneDetails[tipKey];
+          if (!z||!d) return null;
+          return (
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-4 z-20 pointer-events-none"
+              style={{animation:'tooltipAppear 0.18s ease'}}>
+              <div className="rounded-2xl px-5 py-3 backdrop-blur-md flex items-center gap-4"
+                style={{background:'rgba(6,14,43,0.97)',border:`1.5px solid ${z.color}`,boxShadow:`0 0 28px ${z.color}44,0 8px 32px #000c`}}>
+                <span className="text-3xl">{z.icon}</span>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-white text-base">{z.label}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                      style={{background:z.color+'33',color:z.color,border:`1px solid ${z.color}55`}}>{z.floor}</span>
+                    {activeFilter===tipKey&&!hoveredZone&&<span className="text-xs text-white/30 italic">seleccionada</span>}
+                  </div>
+                  <div className="text-xs text-white/60 mb-1">{d.desc}</div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span style={{color:z.color}} className="font-bold">{d.kw} kW</span>
+                    <span className="text-white/50">·</span>
+                    <span className="text-white/70">{d.backup}</span>
+                    <span className="text-white/50">·</span>
+                    <span className={`font-semibold ${d.priority==='CRÍTICA'?'text-red-400':d.priority==='ESENCIAL'?'text-yellow-400':'text-blue-400'}`}>{d.priority}</span>
+                    <span className="text-white/50">· uptime</span>
+                    <span className="text-energy-green-400 font-bold">{d.uptime}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // 2 ── Subestación (filtro batteries)
+        if (activeFilter==='batteries') {
+          return (
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-4 z-20 pointer-events-none"
+              style={{animation:'tooltipAppear 0.18s ease'}}>
+              <div className="rounded-2xl px-5 py-3 backdrop-blur-md"
+                style={{background:'rgba(6,14,43,0.97)',border:'1.5px solid #a855f7',boxShadow:'0 0 28px #a855f744,0 8px 32px #000c'}}>
+                <div className="font-bold text-white text-base mb-1">⚡ Subestación Eléctrica</div>
+                <div className="text-xs text-white/60 mb-2">Inversores híbridos + Banco LFP + SCADA · Red AIRE 220V/60Hz</div>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="text-center"><div className="text-purple-300 font-bold text-base">300 kWh</div><div className="text-white/50">Banco LFP</div></div>
+                  <div className="text-center"><div className="text-purple-300 font-bold text-base">2×125 kVA</div><div className="text-white/50">Inversores</div></div>
+                  <div className="text-center"><div className="text-energy-green-400 font-bold text-base">98.5%</div><div className="text-white/50">MPPT</div></div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // 3 ── Categoría de prioridad (CRÍTICA / ESENCIAL / BÁSICA)
+        if (activeFilter && ['CRÍTICA','ESENCIAL','BÁSICA'].includes(activeFilter)) {
+          const grpZones = zones.filter(z=>z.priority===activeFilter);
+          const totalKw  = grpZones.reduce((s,z)=>s+(zoneDetails[z.key]?.kw||0), 0);
+          const grpColor = activeFilter==='CRÍTICA'?'#ef4444':activeFilter==='ESENCIAL'?'#f59e0b':'#3b82f6';
+          const grpEmoji = activeFilter==='CRÍTICA'?'🔴':activeFilter==='ESENCIAL'?'🟡':'🔵';
+          return (
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-4 z-20 pointer-events-none"
+              style={{animation:'tooltipAppear 0.18s ease'}}>
+              <div className="rounded-2xl px-5 py-3 backdrop-blur-md"
+                style={{background:'rgba(6,14,43,0.97)',border:`1.5px solid ${grpColor}`,boxShadow:`0 0 28px ${grpColor}44,0 8px 32px #000c`}}>
+                <div className="font-bold text-white text-base mb-2">{grpEmoji} Zonas {activeFilter}S</div>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {grpZones.map(z=>{
+                    const d=zoneDetails[z.key];
+                    return (
+                      <div key={z.key} className="text-xs rounded-lg px-2 py-1"
+                        style={{background:z.color+'1a',border:`1px solid ${z.color}44`,color:'#e2e8f0'}}>
+                        <span>{z.icon} <strong style={{color:z.color}}>{z.label}</strong></span>
+                        <span className="text-white/50 ml-1">{d?.kw} kW · uptime {d?.uptime}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-3 text-xs text-white/55">
+                  <span>Carga total: <strong style={{color:grpColor}}>{totalKw} kW</strong></span>
+                  <span>·</span>
+                  <span>{grpZones.length} zona{grpZones.length>1?'s':''}</span>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return null;
+      })()}
+    </div>
+  );
+}
+
+
+function HospitalScene3DSlide() {
+  const [activeFilter, setActiveFilter] = useState(null);
+
+  // Categorías → filtros de prioridad
+  const CATEGORIES = [
+    { key: 'CRÍTICA',  label: '🔴 Zona Crítica',    color: '#ef4444', info: 'UCI · Quirófanos · Data Center — prioridad máxima 24/7' },
+    { key: 'ESENCIAL', label: '🟡 Zona Esencial',   color: '#f59e0b', info: 'Farmacia · HVAC — operación continua requerida' },
+    { key: 'BÁSICA',   label: '🔵 Zona Básica',     color: '#3b82f6', info: 'Pasillos e iluminación general' },
+    { key: 'batteries',label: '🟣 Subestación',     color: '#a855f7', info: 'Banco LFP 300kWh + 2 Inversores 125kVA + SCADA + AIRE 220V' },
+  ];
+
+  // Zonas individuales
+  const ZONES = [
+    { key: 'uci',         label: 'UCI',         icon: '❤️',  color: '#ef4444' },
+    { key: 'quirofanos',  label: 'Quirófanos',  icon: '🔪',  color: '#f87171' },
+    { key: 'datacenter',  label: 'Data Center', icon: '🖥️', color: '#6366f1' },
+    { key: 'farmacia',    label: 'Farmacia',    icon: '💊',  color: '#f59e0b' },
+    { key: 'hvac',        label: 'HVAC',        icon: '🌡️', color: '#10b981' },
+    { key: 'iluminacion', label: 'Pasillos',    icon: '💡',  color: '#3b82f6' },
+  ];
+
+  const toggleFilter = (key) => setActiveFilter(prev => prev === key ? null : key);
+
+  const activeInfo = CATEGORIES.find(c=>c.key===activeFilter)?.info
+                  || ZONES.find(z=>z.key===activeFilter)?.label;
+
+  return (
+    <Section id="hospital3d" className="bg-medical-blue-950 overflow-hidden">
+      <Reveal>
+        <div className="text-center mb-10">
+          <span className="text-energy-green-400 text-sm font-semibold tracking-widest uppercase mb-3 block">
+            02b · Vista Isométrica del Ecosistema
+          </span>
+          <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
+            Hospital Solar{' '}
+            <span className="text-transparent bg-clip-text"
+              style={{ backgroundImage: 'linear-gradient(135deg, #fbbf24, #34d399)' }}>
+              Nazareth 1
+            </span>
+          </h2>
+          <p className="text-medical-blue-300 max-w-2xl mx-auto">
+            Visualización 3D isométrica interactiva · Hover para métricas · Selecciona
+            una categoría o zona individual para hacer zoom y filtrar.
+          </p>
+        </div>
+      </Reveal>
+
+      {/* ── Filtros de categoría ── */}
+      <Reveal delay={80}>
+        <div className="flex flex-wrap justify-center gap-2 mb-3">
+          {CATEGORIES.map(cat => {
+            const active = activeFilter === cat.key;
+            return (
+              <button key={cat.key}
+                onClick={() => toggleFilter(cat.key)}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200"
+                style={{
+                  background: active ? cat.color + '33' : 'rgba(15,32,68,0.8)',
+                  border: `1.5px solid ${active ? cat.color : cat.color + '44'}`,
+                  color: active ? cat.color : '#94a3b8',
+                  boxShadow: active ? `0 0 14px ${cat.color}44` : 'none',
+                  transform: active ? 'scale(1.06)' : 'scale(1)',
+                }}>
+                {cat.label}
+                {active && <span className="text-white/60 ml-1 text-xs">✕</span>}
+              </button>
+            );
+          })}
+        </div>
+      </Reveal>
+
+      {/* ── Filtros de zona individual ── */}
+      <Reveal delay={120}>
+        <div className="flex flex-wrap justify-center gap-2 mb-5">
+          {ZONES.map(z => {
+            const active = activeFilter === z.key;
+            return (
+              <button key={z.key}
+                onClick={() => toggleFilter(z.key)}
+                className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200"
+                style={{
+                  background: active ? z.color + '2a' : 'rgba(10,20,50,0.7)',
+                  border: `1px solid ${active ? z.color : z.color + '33'}`,
+                  color: active ? z.color : '#cbd5e1',
+                  boxShadow: active ? `0 0 10px ${z.color}33` : 'none',
+                  transform: active ? 'scale(1.08)' : 'scale(1)',
+                }}>
+                <span>{z.icon}</span> {z.label}
+              </button>
+            );
+          })}
+        </div>
+      </Reveal>
+
+      {/* Info bar del filtro activo */}
+      {activeFilter && activeInfo && (
+        <div className="flex justify-center mb-4">
+          <div className="text-xs text-white/55 bg-white/5 border border-white/10 rounded-full px-4 py-1.5">
+            🔍 {activeInfo}
+            <button onClick={()=>setActiveFilter(null)} className="ml-3 text-white/40 hover:text-white/80 transition-colors">✕ limpiar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Escena 3D isométrica */}
+      <Reveal direction="slideRotate">
+        <div className="relative bg-medical-blue-950 border border-medical-blue-800/50 rounded-3xl overflow-hidden"
+          style={{
+            background: 'radial-gradient(ellipse at 60% 30%, #0d1e4a 0%, #060e2b 70%)',
+            boxShadow: '0 0 80px rgba(52,211,153,0.06), inset 0 0 60px rgba(0,0,0,0.5)',
+          }}>
+          <HospitalIsoScene externalFilter={activeFilter} />
+        </div>
+      </Reveal>
+
+      {/* Leyenda compacta */}
+      <Reveal delay={300}>
+        <div className="mt-6 flex flex-wrap justify-center gap-3 text-xs text-white/40">
+          <span>🔴 Crítica</span><span>·</span>
+          <span>🟡 Esencial</span><span>·</span>
+          <span>🔵 Básica</span><span>·</span>
+          <span>🟢 Paneles FV</span><span>·</span>
+          <span>🟣 Subestación AIRE</span><span>·</span>
+          <span className="text-white/25 italic">Hover = métricas · Click categoría = zoom grupo</span>
+        </div>
+      </Reveal>
     </Section>
   );
 }
@@ -1342,6 +1993,7 @@ export default function App() {
         <HeroSlide />
         <VisionSlide />
         <EcosistemaSlide />
+        <HospitalScene3DSlide />
         <DatosSlide />
         <RetosSlide />
         <ImpactoSlide />
