@@ -159,3 +159,26 @@ body {
   from { opacity: 0; transform: scale(0.92) translateY(4px); }
   to   { opacity: 1; transform: scale(1)   translateY(0);    }
 }
+
+/* ── slide-rotate-hor-b-fwd (Animista) ── */
+@keyframes slideRotateBFwd {
+  0% {
+    transform: perspective(700px) translateY(48px) rotateX(-40deg);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(700px) translateY(0px) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.reveal-slide-rotate {
+  opacity: 0;
+  transform: perspective(700px) translateY(48px) rotateX(-40deg);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.reveal-slide-rotate.revealed {
+  animation: slideRotateBFwd 0.65s cubic-bezier(0.165, 0.840, 0.440, 1.000) forwards;
+}
