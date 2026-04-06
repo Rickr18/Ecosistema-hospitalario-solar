@@ -1,9 +1,26 @@
 actividades/actividad-02-modelo-basico-generacion-solar-python/*.png
 generacion_solar_nazareth.png
 escenarios_instalacion_nazareth.png
+
+# Actividad 3 - graficos generados
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_diario_demanda.png
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_semanal_demanda.png
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_mensual_demanda.png
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/heatmap_demanda_horaria.png
+
+# Python caches y entorno virtual
+/.venv/
 **/__pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
 
 # Presentación interactiva — build artifacts and dependencies
 presentacion-interactiva/node_modules/
 presentacion-interactiva/dist/
+
+# Entregas para mooddle
+Entrega_Hospital_Nazareth1
+Entrega_Hospital_Nazareth1.zip
