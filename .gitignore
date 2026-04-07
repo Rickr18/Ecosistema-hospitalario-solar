@@ -24,3 +24,8 @@ presentacion-interactiva/dist/
 # Entregas para mooddle
 Entrega_Hospital_Nazareth1
 Entrega_Hospital_Nazareth1.zip
+
+# Actividad 4 - artefactos locales
+actividades/actividad-04-dashboard-energetico-gerencia-hospitalaria/__pycache__/
+actividades/actividad-04-dashboard-energetico-gerencia-hospitalaria/.env
+actividades/actividad-04-dashboard-energetico-gerencia-hospitalaria/.env.*
