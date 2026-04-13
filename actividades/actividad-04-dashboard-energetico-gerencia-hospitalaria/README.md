@@ -24,9 +24,11 @@ raíz del proyecto (el script lo busca automáticamente en `../../data/`).
 .venv\Scripts\activate          # Windows
 source .venv/bin/activate       # Linux / macOS
 
-# Instalar dependencias si no están
-pip install dash plotly pandas openpyxl
+# Instalar todas las dependencias del proyecto
+pip install -r requirements.txt
 ```
+
+> Ver el [README raíz](../../README.md) para instrucciones de creación del `.venv`.
 
 ---
 
@@ -45,13 +47,24 @@ Abrir en el navegador: **http://127.0.0.1:8050**
 
 | Panel | Descripción | Fuente |
 |---|---|---|
-| KPI Cards | Generación, consumo, autosuficiencia, ahorro COP, déficit | Act. 2 + Excel |
-| Gauge circular | % autosuficiencia del mes seleccionado con semáforo gerencial | Act. 2 + Excel |
+| Header | Gradiente azul `#1e3a5f → #2563eb` con selector de mes | — |
+| KPI Cards | Generación, consumo, autosuficiencia, ahorro COP, déficit — borde superior por color | Act. 2 + Excel |
+| Gauge circular | % autosuficiencia del mes — semáforo gerencial sin delta confuso | Act. 2 + Excel |
 | Barras agrupadas | Generación vs consumo por mes, mes activo resaltado | Act. 2 + Excel |
 | Barras horizontales | Consumo por área (UCI, Quirófanos, Farmacia, Data Center, HVAC, Iluminación) | Act. 3 |
 | Alertas gerenciales | Déficit/excedente, umbral autosuficiencia, alerta UCI | Act. 2 + Act. 3 |
-| Línea anual | Generación vs consumo con eje secundario de autosuficiencia | Act. 2 + Excel |
-| Escenarios | Comparación de instalación 200 / 500 / 1 000 m² | Act. 2 |
+| Evolución anual | Líneas de área + eje secundario de autosuficiencia % (Ene–Nov 2018) | Act. 2 + Excel |
+| Escenarios | Comparación de instalación 200 / 500 / 1 000 m² con cobertura estimada | Act. 2 |
+
+### Paleta de colores (alineada con Actividad 3)
+
+| Token | Hex | Uso |
+|---|---|---|
+| Verde | `#10b981` | Generación solar, indicadores positivos |
+| Rojo | `#ef4444` | Consumo, alertas críticas |
+| Azul | `#2563eb` | Acento, header, escenario mediano |
+| Amarillo | `#f59e0b` | Advertencias, puntos de cobertura |
+| Púrpura | `#6366f1` | Escenario grande, Data Center |
 
 ---
 

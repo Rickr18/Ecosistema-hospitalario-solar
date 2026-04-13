@@ -16,9 +16,10 @@ a partir del archivo Excel de consumo de energía 2018.
 
 import math
 import os
+import sys
 
-import matplotlib.pyplot as plt
 import openpyxl
+from playwright.sync_api import sync_playwright
 
 # ---------------------------------------------------------------------------
 # Parámetros del Hospital Nazareth (Barranquilla, Colombia)
@@ -201,7 +202,37 @@ def calcular_generacion_mensual(
 
 
 # ---------------------------------------------------------------------------
-# Visualización
+# Utilidad de renderizado HTML → PNG
+# ---------------------------------------------------------------------------
+
+def _render_html(html: str, out_path: str, width: int = 1400) -> None:
+    """Renderiza HTML+CSS a PNG de alta resolución usando Playwright/Chromium."""
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page    = browser.new_page(
+            viewport={"width": width, "height": 900},
+            device_scale_factor=2,
+        )
+        page.set_content(html, wait_until="networkidle")
+        height = page.evaluate("() => document.documentElement.scrollHeight")
+        page.set_viewport_size({"width": width, "height": height})
+        page.screenshot(path=out_path, full_page=True)
+        browser.close()
+    print(f"  Gráfico guardado: {out_path}")
+
+
+_BASE_CSS = """
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: #0f1729;
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+"""
+
+# ---------------------------------------------------------------------------
+# Visualización — generacion_solar_nazareth.png
 # ---------------------------------------------------------------------------
 
 def graficar_generacion_mensual(
@@ -210,84 +241,226 @@ def graficar_generacion_mensual(
     area: float,
     eficiencia: float,
 ) -> None:
-    """Genera dos gráficos:
-    1. Generación solar diaria estimada por mes vs. consumo hospitalario.
+    """Genera generacion_solar_nazareth.png con dos paneles:
+    1. Generación solar diaria estimada por mes vs. consumo.
     2. Porcentaje de cobertura solar mensual.
-
-    Args:
-        generacion: Diccionario {mes: energía generada (kWh/día)}.
-        consumo: Consumo energético diario del hospital (kWh/día).
-        area: Área de paneles instalada (m²).
-        eficiencia: Eficiencia del sistema fotovoltaico (0‒1).
     """
-    meses = list(generacion.keys())
-    valores = list(generacion.values())
+    meses    = list(generacion.keys())
+    valores  = list(generacion.values())
     coberturas = [calcular_cobertura(v, consumo) for v in valores]
+    max_val  = max(valores) * 1.2
+    max_cob  = 115
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 9))
-    fig.suptitle(
-        f"Hospital Nazareth 1 – Modelo de Generación Solar\n"
-        f"Área: {area} m²  |  Eficiencia: {eficiencia * 100:.0f} %",
-        fontsize=13,
-        fontweight="bold",
-    )
+    # ── barras gráfico 1 ──────────────────────────────────────────────────
+    bars1 = ""
+    for mes, val, cob in zip(meses, valores, coberturas):
+        color = "#22c55e" if val >= consumo else "#3b82f6"
+        h_pct = val / max_val * 100
+        bars1 += f"""
+        <div class="bar-col">
+          <div class="bar-val">{val:,.0f}</div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:{h_pct:.1f}%;background:{color}"></div>
+          </div>
+          <div class="bar-label">{mes[:3]}</div>
+        </div>"""
 
-    # --- Gráfico 1: generación vs. consumo ---
-    colores = ["#2ecc71" if v >= consumo else "#3498db" for v in valores]
-    bars = ax1.bar(meses, valores, color=colores, edgecolor="white", linewidth=0.5)
-    ax1.axhline(y=consumo, color="#e74c3c", linestyle="--", linewidth=1.5,
-                label=f"Consumo diario ({consumo:,.0f} kWh/día)")
-    ax1.set_ylabel("Energía (kWh/día)", fontsize=11)
-    ax1.set_title("Generación Solar Diaria Estimada por Mes", fontsize=11)
-    ax1.legend(fontsize=9)
-    ax1.tick_params(axis="x", rotation=30)
-    ax1.set_ylim(0, max(valores) * 1.25)
-    for bar, val in zip(bars, valores):
-        ax1.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 5,
-            f"{val:,.0f}",
-            ha="center", va="bottom", fontsize=8,
-        )
+    # línea de consumo: posición como % desde arriba = (1 - consumo/max_val)*100
+    consumo_top = (1 - consumo / max_val) * 100
 
-    # --- Gráfico 2: porcentaje de cobertura ---
-    colores2 = ["#27ae60" if c >= 100 else "#f39c12" if c >= 50 else "#e74c3c"
-                for c in coberturas]
-    bars2 = ax2.bar(meses, coberturas, color=colores2, edgecolor="white", linewidth=0.5)
-    ax2.axhline(y=100, color="#2c3e50", linestyle="--", linewidth=1.5,
-                label="Cobertura total (100 %)")
-    ax2.set_ylabel("Cobertura solar (%)", fontsize=11)
-    ax2.set_title("Porcentaje de Cobertura del Consumo Hospitalario", fontsize=11)
-    ax2.set_ylim(0, 115)
-    ax2.legend(fontsize=9)
-    ax2.tick_params(axis="x", rotation=30)
-    for bar, cob in zip(bars2, coberturas):
-        ax2.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 1,
-            f"{cob:.1f} %",
-            ha="center", va="bottom", fontsize=8,
-        )
+    # ── barras gráfico 2 ──────────────────────────────────────────────────
+    bars2 = ""
+    for mes, cob in zip(meses, coberturas):
+        color = "#22c55e" if cob >= 100 else "#f59e0b" if cob >= 50 else "#ef4444"
+        h_pct = cob / max_cob * 100
+        bars2 += f"""
+        <div class="bar-col">
+          <div class="bar-val" style="color:{color}">{cob:.1f}%</div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:{h_pct:.1f}%;background:{color}"></div>
+          </div>
+          <div class="bar-label">{mes[:3]}</div>
+        </div>"""
 
-    plt.tight_layout()
-    output_path = "generacion_solar_nazareth.png"
-    plt.savefig(output_path, dpi=150, bbox_inches="tight")
-    print(f"\nGráfico guardado como: {output_path}")
-    plt.show()
+    # línea 100% en gráfico 2
+    cien_top = (1 - 100 / max_cob) * 100
 
+    html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<style>
+{_BASE_CSS}
+.page {{ width:1400px; padding:0 0 32px; }}
+
+.page-header {{
+  background: #1a3a5c;
+  padding: 22px 40px;
+  border-bottom: 3px solid #0ea5e9;
+}}
+.page-header h1 {{ font-size:20px; font-weight:700; color:#fff; }}
+.page-header p  {{ font-size:12px; color:#94a3b8; margin-top:4px; }}
+
+.chart-block {{
+  margin: 24px 40px 0;
+  background: #1a2540;
+  border-radius: 14px;
+  padding: 24px 28px 20px;
+}}
+.chart-title {{
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 18px;
+}}
+.chart-subtitle {{ font-size: 12px; color: #94a3b8; margin-top: 4px; }}
+
+/* Layout de barras */
+.bars-area {{
+  position: relative;
+  height: 240px;
+}}
+.bars-row {{
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  padding: 0 0 0 0;
+}}
+.bar-col {{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}}
+.bar-val {{
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  min-height: 16px;
+  text-align: center;
+}}
+.bar-wrap {{
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}}
+.bar {{
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: height .3s;
+}}
+.bar-label {{
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  padding-top: 6px;
+}}
+
+/* Línea de referencia */
+.ref-line {{
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 2px dashed #ef4444;
+  pointer-events: none;
+}}
+.ref-label {{
+  position: absolute;
+  right: 0;
+  font-size: 10px;
+  color: #ef4444;
+  font-weight: 600;
+  background: #1a2540;
+  padding: 0 4px;
+  transform: translateY(-50%);
+}}
+
+/* Leyenda */
+.legend {{
+  display: flex;
+  gap: 20px;
+  margin-top: 14px;
+}}
+.legend-item {{
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #94a3b8;
+}}
+.legend-dot {{
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}}
+</style>
+</head><body>
+<div class="page">
+  <div class="page-header">
+    <h1>Hospital Nazareth 1 — Modelo de Generación Solar · Barranquilla 2018</h1>
+    <p>Área instalada: {area:,.0f} m²  ·  Eficiencia del sistema: {eficiencia*100:.0f}%  ·  Irradiación: IDEAM / NASA POWER</p>
+  </div>
+
+  <!-- Gráfico 1 -->
+  <div class="chart-block">
+    <div class="chart-title">Generación Solar Diaria Estimada por Mes
+      <span class="chart-subtitle"> — kWh/día</span>
+    </div>
+    <div class="bars-area">
+      <div class="ref-line" style="top:{consumo_top:.1f}%">
+        <span class="ref-label">Consumo diario {consumo:,.0f} kWh/día</span>
+      </div>
+      <div class="bars-row">{bars1}</div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Supera el consumo</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Por debajo del consumo</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444;height:2px;border-radius:0;width:20px"></div>Consumo diario de referencia</div>
+    </div>
+  </div>
+
+  <!-- Gráfico 2 -->
+  <div class="chart-block">
+    <div class="chart-title">Porcentaje de Cobertura del Consumo Hospitalario
+      <span class="chart-subtitle"> — %</span>
+    </div>
+    <div class="bars-area">
+      <div class="ref-line" style="top:{cien_top:.1f}%">
+        <span class="ref-label">100% cobertura</span>
+      </div>
+      <div class="bars-row">{bars2}</div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Cobertura total (≥ 100%)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Cobertura parcial (50–99%)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Cobertura crítica (< 50%)</div>
+    </div>
+  </div>
+</div>
+</body></html>"""
+
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "generacion_solar_nazareth.png")
+    _render_html(html, out)
+
+
+# ---------------------------------------------------------------------------
+# Visualización — escenarios_instalacion_nazareth.png
+# ---------------------------------------------------------------------------
 
 def analizar_escenarios(consumo: float) -> None:
-    """Compara tres escenarios de instalación (área pequeña, mediana y grande).
-
-    Args:
-        consumo: Consumo energético diario del hospital (kWh/día).
-    """
+    """Compara tres escenarios de instalación y genera escenarios_instalacion_nazareth.png."""
     irradiancia_promedio = sum(IRRADIANCIA_MENSUAL.values()) / len(IRRADIANCIA_MENSUAL)
-    escenarios = {
-        "Pequeño (200 m²)":  calcular_energia_diaria(irradiancia_promedio, 200,  EFICIENCIA_SISTEMA),
-        "Mediano (500 m²)":  calcular_energia_diaria(irradiancia_promedio, 500,  EFICIENCIA_SISTEMA),
-        "Grande (1 000 m²)": calcular_energia_diaria(irradiancia_promedio, 1000, EFICIENCIA_SISTEMA),
-    }
+    escenarios = [
+        {"nombre": "Pequeño",  "area": 200,  "color": "#3b82f6", "bg": "#1e3a5f"},
+        {"nombre": "Mediano",  "area": 500,  "color": "#22c55e", "bg": "#14432a"},
+        {"nombre": "Grande",   "area": 1000, "color": "#a855f7", "bg": "#3b1f5e"},
+    ]
+    for e in escenarios:
+        e["energia"] = calcular_energia_diaria(irradiancia_promedio, e["area"], EFICIENCIA_SISTEMA)
+        e["cobertura"] = calcular_cobertura(e["energia"], consumo)
+
+    max_e = max(e["energia"] for e in escenarios) * 1.2
 
     print("\n" + "=" * 55)
     print("  COMPARACIÓN DE ESCENARIOS – IRRADIANCIA PROMEDIO ANUAL")
@@ -298,38 +471,151 @@ def analizar_escenarios(consumo: float) -> None:
     print("-" * 55)
     print(f"  {'Escenario':<{_COL_ESC}} {'Generación':>{_COL_GEN_ESC}}  {'Cobertura':>{_COL_COB}}")
     print("-" * 55)
-    for nombre, energia in escenarios.items():
-        cobertura = calcular_cobertura(energia, consumo)
-        print(f"  {nombre:<{_COL_ESC}} {energia:>{_COL_GEN_ESC}.1f} kWh  {cobertura:>{_COL_COB - 2}.1f} %")
+    for e in escenarios:
+        label = f"{e['nombre']} ({e['area']} m²)"
+        print(f"  {label:<{_COL_ESC}} {e['energia']:>{_COL_GEN_ESC}.1f} kWh  {e['cobertura']:>{_COL_COB - 2}.1f} %")
     print("=" * 55)
 
-    # Gráfico de barras de escenarios
-    fig, ax = plt.subplots(figsize=(8, 5))
-    nombres = list(escenarios.keys())
-    energias = list(escenarios.values())
-    colores = ["#3498db", "#2ecc71", "#9b59b6"]
-    bars = ax.bar(nombres, energias, color=colores, edgecolor="white", linewidth=0.5)
-    ax.axhline(y=consumo, color="#e74c3c", linestyle="--", linewidth=1.5,
-               label=f"Consumo diario ({consumo:,.0f} kWh/día)")
-    ax.set_ylabel("Energía generada (kWh/día)", fontsize=11)
-    ax.set_title(
-        "Hospital Nazareth 1 – Comparación de Escenarios de Instalación Solar",
-        fontsize=11, fontweight="bold",
-    )
-    ax.legend(fontsize=9)
-    ax.set_ylim(0, max(energias) * 1.3)
-    for bar, val in zip(bars, energias):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 5,
-            f"{val:,.0f} kWh/día",
-            ha="center", va="bottom", fontsize=9,
-        )
-    plt.tight_layout()
-    escenarios_path = "escenarios_instalacion_nazareth.png"
-    plt.savefig(escenarios_path, dpi=150, bbox_inches="tight")
-    print(f"Gráfico de escenarios guardado como: {escenarios_path}")
-    plt.show()
+    consumo_top = (1 - consumo / max_e) * 100
+
+    cards_html = ""
+    bars_html  = ""
+    for e in escenarios:
+        h_pct = e["energia"] / max_e * 100
+        cob_color = "#22c55e" if e["cobertura"] >= 100 else "#f59e0b" if e["cobertura"] >= 50 else "#ef4444"
+        cards_html += f"""
+        <div class="esc-card" style="border-top:4px solid {e['color']}">
+          <div class="esc-area" style="color:{e['color']}">{e['area']} m²</div>
+          <div class="esc-nombre">{e['nombre']}</div>
+          <div class="esc-energia">{e['energia']:,.0f} <span>kWh/día</span></div>
+          <div class="esc-cob" style="color:{cob_color}">{e['cobertura']:.1f}% cobertura</div>
+          <div class="esc-paneles">{int(e['area'] / 2)} paneles · {e['area']} m²</div>
+        </div>"""
+        bars_html += f"""
+        <div class="bar-col">
+          <div class="bar-val">{e['energia']:,.0f} kWh/día</div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:{h_pct:.1f}%;background:{e['color']}"></div>
+          </div>
+          <div class="bar-label">{e['nombre']}<br><small>{e['area']} m²</small></div>
+        </div>"""
+
+    html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<style>
+{_BASE_CSS}
+.page {{ width:1400px; padding:0 0 40px; }}
+.page-header {{
+  background: #1a3a5c;
+  padding: 22px 40px;
+  border-bottom: 3px solid #a855f7;
+}}
+.page-header h1 {{ font-size:20px; font-weight:700; color:#fff; }}
+.page-header p  {{ font-size:12px; color:#94a3b8; margin-top:4px; }}
+
+.content {{ padding: 24px 40px; display: flex; flex-direction: column; gap: 24px; }}
+
+/* Tarjetas resumen */
+.cards-row {{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}}
+.esc-card {{
+  background: #1a2540;
+  border-radius: 12px;
+  padding: 24px 22px;
+}}
+.esc-area   {{ font-size:30px; font-weight:800; }}
+.esc-nombre {{ font-size:14px; color:#94a3b8; margin: 4px 0 14px; text-transform:uppercase; letter-spacing:.08em; }}
+.esc-energia {{ font-size:26px; font-weight:700; color:#e2e8f0; }}
+.esc-energia span {{ font-size:13px; color:#64748b; }}
+.esc-cob    {{ font-size:14px; font-weight:700; margin: 8px 0 6px; }}
+.esc-paneles {{ font-size:12px; color:#64748b; }}
+
+/* Gráfico de barras */
+.chart-block {{
+  background: #1a2540;
+  border-radius: 14px;
+  padding: 24px 80px 20px;
+}}
+.chart-title {{ font-size:14px; font-weight:700; color:#e2e8f0; margin-bottom:18px; }}
+
+.bars-area {{ position: relative; height: 280px; }}
+.bars-row {{
+  display: flex;
+  align-items: flex-end;
+  gap: 60px;
+  height: 220px;
+  justify-content: center;
+}}
+.bar-col {{
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}}
+.bar-val  {{ font-size:13px; color:#e2e8f0; font-weight:700; }}
+.bar-wrap {{ flex:1; width:100%; display:flex; align-items:flex-end; }}
+.bar      {{ width:100%; border-radius:6px 6px 0 0; min-height:4px; }}
+.bar-label {{ font-size:12px; color:#64748b; text-align:center; padding-top:8px; line-height:1.5; }}
+.bar-label small {{ font-size:11px; }}
+
+.ref-line  {{ position:absolute; left:0; right:0; border-top:2px dashed #ef4444; pointer-events:none; }}
+.ref-label {{ position:absolute; right:0; font-size:11px; color:#ef4444; font-weight:600;
+              background:#1a2540; padding:0 6px; transform:translateY(-50%); }}
+
+/* kpi inferior */
+.kpi-row {{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  background: #1a2540;
+  border-radius: 12px;
+  padding: 20px 24px;
+}}
+.kpi {{ text-align: center; }}
+.kpi-val {{ font-size: 18px; font-weight: 700; color: #0ea5e9; }}
+.kpi-lbl {{ font-size: 12px; color: #64748b; margin-top: 4px; }}
+</style>
+</head><body>
+<div class="page">
+  <div class="page-header">
+    <h1>Hospital Nazareth 1 — Comparación de Escenarios de Instalación Solar</h1>
+    <p>Irradiancia promedio anual Barranquilla: {irradiancia_promedio:.2f} kWh/m²/día  ·  Eficiencia: {EFICIENCIA_SISTEMA*100:.0f}%  ·  Consumo diario real: {consumo:,.0f} kWh/día</p>
+  </div>
+  <div class="content">
+    <div class="cards-row">{cards_html}</div>
+    <div class="chart-block">
+      <div class="chart-title">Energía generada diaria por escenario vs. consumo real del hospital</div>
+      <div class="bars-area">
+        <div class="ref-line" style="top:{consumo_top:.1f}%">
+          <span class="ref-label">Consumo diario {consumo:,.0f} kWh/día</span>
+        </div>
+        <div class="bars-row">{bars_html}</div>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-val">{irradiancia_promedio:.2f} kWh/m²/día</div>
+        <div class="kpi-lbl">Irradiancia promedio anual · Barranquilla</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">{consumo:,.0f} kWh/día</div>
+        <div class="kpi-lbl">Consumo diario real · Hospital Nazareth 1</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">{EFICIENCIA_SISTEMA*100:.0f}%</div>
+        <div class="kpi-lbl">Eficiencia del sistema fotovoltaico</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>"""
+
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "escenarios_instalacion_nazareth.png")
+    _render_html(html, out)
 
 
 # ---------------------------------------------------------------------------

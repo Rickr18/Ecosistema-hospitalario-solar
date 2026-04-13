@@ -1,23 +1,79 @@
 # Actividad 2: Modelo básico de generación solar en Python
 
-## Introducción
-
-La gestión sostenible de proyectos hospitalarios requiere herramientas que permitan anticipar, analizar y comunicar el comportamiento de los sistemas energéticos de manera clara y confiable. Esta actividad introduce al estudiante en el uso de la programación como herramienta de apoyo a la gerencia de proyectos.
-
 ## Objetivo
 
-Desarrollar un script en Python que estime la generación diaria de energía solar en un hospital a partir de variables técnicas básicas: irradiancia promedio diaria, área disponible para paneles solares y eficiencia del sistema.
+Desarrollar un script en Python que estime la generación diaria y mensual de energía solar del Hospital Nazareth 1, calibrado con los datos reales de consumo 2018, e identificar los meses de mayor y menor producción fotovoltaica.
 
-## Desarrollo teórico
+---
 
-Desde la perspectiva de la gerencia de proyectos sostenibles, la estimación de la generación energética es una fase clave en la planificación. El uso de Python responde a su versatilidad, claridad sintáctica y capacidad para integrar cálculo, lógica y visualización. Un modelo básico bien estructurado transforma información dispersa en conocimiento útil para directivos, ingenieros y gestores de proyectos hospitalarios.
+## Archivos
 
-## Entregables esperados
+| Archivo | Descripción |
+|---|---|
+| `generacion_solar.py` | Modelo principal: carga Excel, calcula generación FV mensual y compara con consumo real |
+| `monitoreo_solar.py` | Visualización complementaria con matplotlib (gráficos de barras y líneas) |
 
-- Script en Python con modelo básico de generación solar fotovoltaica.
-- Visualización de resultados (gráficos de energía generada o comparaciones de escenarios).
-- Documentación del modelo explicando cada variable y su significado.
+---
+
+## Parámetros del modelo
+
+| Parámetro | Valor | Fuente |
+|---|---|---|
+| Área de paneles | 500 m² | Supuesto de diseño |
+| Eficiencia del sistema | 15% | Estándar paneles policristalinos |
+| Irradiancia mensual | 4.38–5.95 kWh/m²/día | IDEAM / NASA POWER — Barranquilla |
+| Días por mes | 30 | Constante de cálculo |
+| Tarifa referencia | $650 COP/kWh | Referencia gerencial |
+
+**Fórmula base:**
+
+```
+Generación (kWh/mes) = Irradiancia × Área × Eficiencia × Días
+```
+
+---
+
+## Ejecución
+
+Desde la raíz del proyecto con el `.venv` activo:
+
+```bash
+.venv\Scripts\python.exe actividades/actividad-02-modelo-basico-generacion-solar-python/generacion_solar.py
+```
+
+O desde dentro de la carpeta:
+
+```bash
+cd actividades/actividad-02-modelo-basico-generacion-solar-python
+..\..\\.venv\Scripts\python.exe generacion_solar.py
+```
+
+El script imprime en consola la tabla de generación vs. consumo mensual y el ahorro estimado en COP.
+
+---
+
+## Salida esperada
+
+```
+Mes          Irrad.   Generación   Consumo      Cobertura   Ahorro COP
+Enero        5.82     4,365 kWh    10,640 kWh   41.0%       $2,837,250
+...
+```
+
+---
+
+## Dependencias
+
+Instaladas desde el `.venv` del proyecto:
+
+```bash
+pip install -r requirements.txt
+```
+
+Paquetes usados: `numpy`, `pandas`, `openpyxl`, `matplotlib`.
+
+---
 
 ## Conclusión
 
-Esta actividad permite comprender el valor de la programación como herramienta estratégica en la gerencia de proyectos sostenibles, integrando sostenibilidad, análisis de datos y pensamiento lógico aplicado a proyectos reales.
+El modelo muestra que con 500 m² y 15% de eficiencia, la generación solar cubre entre el **32% y el 43%** del consumo mensual según el mes, con los mejores valores en enero–marzo (mayor irradiancia en Barranquilla) y los valores mínimos en septiembre–octubre.

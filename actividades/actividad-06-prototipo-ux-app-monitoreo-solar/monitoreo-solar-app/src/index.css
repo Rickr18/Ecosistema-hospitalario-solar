@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* ── Design tokens — same palette as actividad-01 ── */
+@theme {
+  --color-medical-blue-50:  #eff6ff;
+  --color-medical-blue-100: #dbeafe;
+  --color-medical-blue-200: #bfdbfe;
+  --color-medical-blue-300: #93c5fd;
+  --color-medical-blue-400: #60a5fa;
+  --color-medical-blue-500: #3b82f6;
+  --color-medical-blue-600: #1d4ed8;
+  --color-medical-blue-700: #1e40af;
+  --color-medical-blue-800: #1e3a8a;
+  --color-medical-blue-900: #0c2461;
+  --color-medical-blue-950: #060e2b;
+
+  --color-energy-green-400: #34d399;
+  --color-energy-green-500: #10b981;
+  --color-energy-green-600: #059669;
+
+  --color-solar-yellow-400: #fbbf24;
+  --color-solar-yellow-500: #f59e0b;
+
+  --color-alert-red-400:    #f87171;
+  --color-alert-red-500:    #ef4444;
+
+  --color-warn-amber-400:   #fb923c;
+  --color-warn-amber-500:   #f97316;
+}
+
+/* ── Base ── */
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: #060e2b;
+  color: white;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0c1a3a; }
+::-webkit-scrollbar-thumb { background: #1d4ed8; border-radius: 3px; }
+
+/* ── Animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes dashflow {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes barGrow {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+/* ── Utility classes ── */
+.animate-fade-in-up   { animation: fadeInUp   0.6s ease-out forwards; }
+.animate-fade-in      { animation: fadeIn     0.4s ease-out forwards; }
+.animate-pulse-slow   { animation: pulse-slow 3s ease-in-out infinite; }
+.animate-spin-slow    { animation: spin-slow  8s linear infinite; }
+.animate-count-up     { animation: countUp    0.5s ease-out forwards; }
+.bar-animated         { animation: barGrow    0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+.flow-line {
+  stroke-dasharray: 8 4;
+  animation: dashflow 1.5s linear infinite;
+}
+
+.animated-gradient-text {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Card glow on hover ── */
+.card-glow:hover {
+  box-shadow: 0 0 32px 0 rgba(52, 211, 153, 0.18);
+}
+
+.card-glow-red:hover {
+  box-shadow: 0 0 32px 0 rgba(239, 68, 68, 0.25);
+}
+
+.card-glow-yellow:hover {
+  box-shadow: 0 0 28px 0 rgba(245, 158, 11, 0.22);
+}
+
+/* ── Sidebar nav active ── */
+.nav-active {
+  background: rgba(59, 130, 246, 0.2);
+  border-left: 3px solid #34d399;
+  color: #34d399;
+}
+
+/* ── Metric number shimmer ── */
+.shimmer-text {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* ── Status dot pulse ── */
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(52,211,153,0.6); }
+  50%       { box-shadow: 0 0 0 6px rgba(52,211,153,0);   }
+}
+.dot-pulse-green { animation: dotPulse 2s ease-in-out infinite; }
+
+@keyframes dotPulseRed {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(239,68,68,0.7); }
+  50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0);   }
+}
+.dot-pulse-red { animation: dotPulseRed 1.4s ease-in-out infinite; }
+
+/* ── Progress bar ── */
+@keyframes progressFill {
+  from { width: 0%; }
+}
+.progress-fill { animation: progressFill 1s ease-out forwards; }

@@ -25,9 +25,11 @@ import math
 import os
 import sys
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 import numpy as np
+from playwright.sync_api import sync_playwright
 
 # ---------------------------------------------------------------------------
 # Importar funciones del modelo base (generacion_solar.py)
@@ -238,130 +240,370 @@ def imprimir_alertas(alertas: list[dict]) -> None:
 
 
 # ===========================================================================
-# 3. VISUALIZACIÓN (4 paneles)
+# 3. VISUALIZACIÓN — HTML+CSS → PNG (4 paneles)
 # ===========================================================================
 
+_BASE_CSS = """
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: #0f1729;
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+"""
+
+def _render_html(html: str, out_path: str, width: int = 1600) -> None:
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page    = browser.new_page(
+            viewport={"width": width, "height": 900},
+            device_scale_factor=2,
+        )
+        page.set_content(html, wait_until="networkidle")
+        height = page.evaluate("() => document.documentElement.scrollHeight")
+        page.set_viewport_size({"width": width, "height": height})
+        page.screenshot(path=out_path, full_page=True)
+        browser.close()
+    print(f"\nGráfico de monitoreo guardado: {out_path}")
+
+
+def _bar_html(val: float, max_val: float, color: str, label: str,
+              tag: str = "", tag_color: str = "#94a3b8") -> str:
+    h = max(val / max_val * 100, 1)
+    return f"""
+    <div class="bar-col">
+      <div class="bar-val">{tag}</div>
+      <div class="bar-wrap">
+        <div class="bar" style="height:{h:.1f}%;background:{color}"></div>
+      </div>
+      <div class="bar-label">{label}</div>
+    </div>"""
+
+
 def graficar_monitoreo(balance: dict[str, dict]) -> None:
-    """Genera visualización completa del monitoreo solar con 4 paneles.
-
-    Panel 1: Irradiación mensual Barranquilla (contexto climático).
-    Panel 2: Generación solar vs. consumo real.
-    Panel 3: Balance energético mensual (barras + / –).
-    Panel 4: Ahorro económico acumulado y CO₂ evitado.
-
-    Args:
-        balance: Resultado de calcular_balance_mensual().
-    """
+    """Genera monitoreo_solar_nazareth.png con 4 paneles de análisis energético."""
     meses = MESES_ORDEN
-    meses_abrev = [m[:3] for m in meses]
+    abrev = [m[:3] for m in meses]
 
-    irr = [balance[m]["irradiancia_kwh_m2_dia"] for m in meses]
-    gen = [balance[m]["gen_mensual_kwh"] for m in meses]
-    consumo = [balance[m]["consumo_mensual_kwh"] for m in meses]
-    bal = [balance[m]["balance_kwh"] for m in meses]
-    ahorro_acum = list(np.cumsum([balance[m]["ahorro_cop"] / 1_000_000 for m in meses]))
-    co2 = [balance[m]["co2_evitado_kg"] for m in meses]
+    irr       = [balance[m]["irradiancia_kwh_m2_dia"] for m in meses]
+    gen       = [balance[m]["gen_mensual_kwh"]        for m in meses]
+    consumo   = [balance[m]["consumo_mensual_kwh"]    for m in meses]
+    bal       = [balance[m]["balance_kwh"]            for m in meses]
+    cob       = [balance[m]["cobertura_pct"]          for m in meses]
+    ahorro_m  = [balance[m]["ahorro_cop"] / 1e6       for m in meses]
+    ahorro_ac = list(np.cumsum(ahorro_m))
+    co2       = [balance[m]["co2_evitado_kg"]         for m in meses]
 
-    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
-    fig.suptitle(
-        "Hospital Nazareth 1 · Monitoreo Solar — Barranquilla 2018\n"
-        f"Área instalada: {AREA_PANELES_M2:.0f} m²  |  "
-        f"Eficiencia: {EFICIENCIA_SISTEMA * 100:.0f} %  |  "
-        f"Pérdidas sistema: {PERDIDAS_SISTEMA_PCT * 100:.0f} %",
-        fontsize=13, fontweight="bold", y=1.01,
-    )
-    fig.patch.set_facecolor("#0f1729")
-    for ax in axes.flat:
-        ax.set_facecolor("#1a2540")
-        ax.tick_params(colors="white", labelsize=8)
-        ax.xaxis.label.set_color("white")
-        ax.yaxis.label.set_color("white")
-        ax.title.set_color("white")
-        for spine in ax.spines.values():
-            spine.set_edgecolor("#334155")
+    total_ahorro = sum(ahorro_m)
+    total_co2    = sum(co2)
+    total_gen    = sum(gen)
+    total_cons   = sum(consumo)
+    cob_prom     = sum(cob) / len(cob)
 
-    # ── Panel 1: Irradiación mensual ──────────────────────────────────────
-    ax1 = axes[0, 0]
-    bars1 = ax1.bar(meses_abrev, irr, color=COLOR_SOLAR, edgecolor="#0f1729", linewidth=0.5, zorder=3)
-    ax1.axhline(y=5.0, color="#60a5fa", linestyle="--", linewidth=1.2,
-                label="Referencia nacional (5.0 kWh/m²/d)", zorder=4)
-    ax1.set_title("Irradiacion Solar GHI — Barranquilla 2018", fontsize=10, fontweight="bold")
-    ax1.set_ylabel("kWh/m²/día", fontsize=9)
-    ax1.set_ylim(3.8, 6.5)
-    ax1.legend(fontsize=7.5, facecolor="#1a2540", labelcolor="white")
-    ax1.grid(axis="y", color="#334155", linewidth=0.5, zorder=0)
-    for bar, val in zip(bars1, irr):
-        ax1.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.05,
-                 f"{val:.2f}", ha="center", va="bottom", fontsize=7.5, color="white")
-    # Anotación climática
-    ax1.annotate("Veranillo\nSan Juan", xy=(6, irr[6]), xytext=(7.2, 5.7),
-                 fontsize=6.5, color="#6ee7b7",
-                 arrowprops=dict(arrowstyle="->", color="#6ee7b7", lw=0.8))
-    ax1.annotate("Temp. lluvias", xy=(9, irr[9]), xytext=(8.0, 4.0),
-                 fontsize=6.5, color="#f87171",
-                 arrowprops=dict(arrowstyle="->", color="#f87171", lw=0.8))
+    # ── Panel 1: Irradiación ─────────────────────────────────────────────
+    irr_min, irr_max = 0.0, 7.0   # base en 0 para barras proporcionales correctas
+    EVENTOS = {
+        "Julio":      ("Veranillo San Juan",       "#6ee7b7"),
+        "Octubre":    ("Mín. lluvias",             "#f87171"),
+        "Febrero":    ("Pico seca",                "#fde68a"),
+    }
+    p1_bars = ""
+    for mes, val, ab in zip(meses, irr, abrev):
+        color  = "#f59e0b" if val >= 5.0 else "#3b82f6"
+        h_pct  = val / irr_max * 100
+        evento = EVENTOS.get(mes, ("", ""))
+        tag_ev = f'<span style="font-size:9px;color:{evento[1]}">{evento[0]}</span>' if evento[0] else ""
+        p1_bars += f"""
+        <div class="bar-col">
+          <div class="bar-val">{val:.2f}</div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:{h_pct:.1f}%;background:{color}"></div>
+          </div>
+          <div class="bar-label">{ab}{('<br>' + tag_ev) if tag_ev else ''}</div>
+        </div>"""
 
-    # ── Panel 2: Generación vs. consumo ──────────────────────────────────
-    ax2 = axes[0, 1]
-    x = np.arange(len(meses))
-    w = 0.4
-    ax2.bar(x - w / 2, gen, width=w, color=COLOR_SOLAR, label="Generación solar (kWh)", edgecolor="#0f1729", linewidth=0.5, zorder=3)
-    ax2.bar(x + w / 2, consumo, width=w, color=COLOR_CONSUMO, label="Consumo real (kWh)", edgecolor="#0f1729", linewidth=0.5, zorder=3)
-    ax2.set_title("Generacion Solar vs. Consumo Real", fontsize=10, fontweight="bold")
-    ax2.set_ylabel("kWh/mes", fontsize=9)
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(meses_abrev, fontsize=8)
-    ax2.legend(fontsize=7.5, facecolor="#1a2540", labelcolor="white")
-    ax2.grid(axis="y", color="#334155", linewidth=0.5, zorder=0)
-    cob_labels = [balance[m]["cobertura_pct"] for m in meses]
-    for i, (g, cob) in enumerate(zip(gen, cob_labels)):
-        ax2.text(i - w / 2, g + 100, f"{cob:.0f}%",
-                 ha="center", va="bottom", fontsize=6.5, color="#6ee7b7")
+    ref5_top = (1 - 5.0 / irr_max) * 100
 
-    # ── Panel 3: Balance energético mensual ──────────────────────────────
-    ax3 = axes[1, 0]
-    colores_bal = [COLOR_BALANCE if b >= 0 else COLOR_DEFICIT for b in bal]
-    bars3 = ax3.bar(meses_abrev, bal, color=colores_bal, edgecolor="#0f1729", linewidth=0.5, zorder=3)
-    ax3.axhline(y=0, color="white", linewidth=1.2, zorder=4)
-    ax3.set_title("Balance Energetico Mensual (Superavit / Deficit)", fontsize=10, fontweight="bold")
-    ax3.set_ylabel("kWh/mes", fontsize=9)
-    ax3.grid(axis="y", color="#334155", linewidth=0.5, zorder=0)
-    patch_s = mpatches.Patch(color=COLOR_BALANCE, label="Superávit solar")
-    patch_d = mpatches.Patch(color=COLOR_DEFICIT, label="Déficit energético")
-    ax3.legend(handles=[patch_s, patch_d], fontsize=7.5, facecolor="#1a2540", labelcolor="white")
-    for bar, val in zip(bars3, bal):
-        offset = 50 if val >= 0 else -200
-        ax3.text(bar.get_x() + bar.get_width() / 2,
-                 bar.get_height() + offset if val >= 0 else bar.get_height() + offset,
-                 f"{val:+,.0f}", ha="center", va="bottom" if val >= 0 else "top",
-                 fontsize=6.5, color="white")
+    # ── Panel 2: Generación vs Consumo ───────────────────────────────────
+    max_gc = max(max(gen), max(consumo)) * 1.15
+    p2_bars = ""
+    for mes, g, c, ab, cv in zip(meses, gen, consumo, abrev, cob):
+        hg = g / max_gc * 100
+        hc = c / max_gc * 100
+        cob_col = "#22c55e" if cv >= 80 else "#f59e0b" if cv >= 50 else "#ef4444"
+        p2_bars += f"""
+        <div class="bar-col2">
+          <div class="bar-val" style="color:{cob_col};font-size:10px">{cv:.0f}%</div>
+          <div class="bar-pair">
+            <div class="bar-pair-inner">
+              <div class="bar b-solar" style="height:{hg:.1f}%"></div>
+              <div class="bar b-consumo" style="height:{hc:.1f}%"></div>
+            </div>
+          </div>
+          <div class="bar-label">{ab}</div>
+        </div>"""
 
-    # ── Panel 4: Ahorro acumulado y CO₂ evitado ──────────────────────────
-    ax4 = axes[1, 1]
-    color_ahorro = "#f59e0b"
-    ax4.bar(meses_abrev, [balance[m]["ahorro_cop"] / 1_000_000 for m in meses],
-            color=color_ahorro, alpha=0.7, label="Ahorro mensual (MCOP)", edgecolor="#0f1729", linewidth=0.5, zorder=3)
-    ax4_twin = ax4.twinx()
-    ax4_twin.plot(meses_abrev, ahorro_acum, color="#34d399", marker="o",
-                  linewidth=2, markersize=5, label="Ahorro acumulado (MCOP)", zorder=5)
-    ax4_twin.tick_params(colors="white", labelsize=8)
-    ax4_twin.yaxis.label.set_color("white")
-    co2_line = ax4.plot(meses_abrev, co2, color=COLOR_CO2, marker="s",
-                        linewidth=1.5, markersize=4, label="CO₂ evitado (kg)", linestyle="--", zorder=5)
-    ax4.set_title("Ahorro Economico y Reduccion de CO2", fontsize=10, fontweight="bold")
-    ax4.set_ylabel("Millones COP", fontsize=9)
-    ax4_twin.set_ylabel("Ahorro acumulado (MCOP)", fontsize=9)
-    ax4.grid(axis="y", color="#334155", linewidth=0.5, zorder=0)
-    lines1, labels1 = ax4.get_legend_handles_labels()
-    lines2, labels2 = ax4_twin.get_legend_handles_labels()
-    ax4.legend(lines1 + lines2, labels1 + labels2, fontsize=7, facecolor="#1a2540", labelcolor="white")
-    ax4_twin.spines["right"].set_edgecolor("#334155")
+    # ── Panel 3: Balance ─────────────────────────────────────────────────
+    max_abs_bal = max(abs(b) for b in bal) * 1.2
+    p3_bars = ""
+    for mes, b, ab in zip(meses, bal, abrev):
+        is_pos  = b >= 0
+        color   = "#10b981" if is_pos else "#8b5cf6"
+        h_pct   = abs(b) / max_abs_bal * 50  # 50% del espacio
+        sign    = "+" if is_pos else ""
+        p3_bars += f"""
+        <div class="bal-col">
+          <div class="bal-val" style="color:{color}">{sign}{b:,.0f}</div>
+          <div class="bal-wrap">
+            <div class="bal-bar-pos" style="{'height:' + str(h_pct) + '%;background:' + color if is_pos else 'height:0'}"></div>
+            <div class="zero-line"></div>
+            <div class="bal-bar-neg" style="{'height:' + str(h_pct) + '%;background:' + color if not is_pos else 'height:0'}"></div>
+          </div>
+          <div class="bar-label">{ab}</div>
+        </div>"""
 
-    plt.tight_layout()
-    output_path = os.path.join(os.path.dirname(__file__), "monitoreo_solar_nazareth.png")
-    plt.savefig(output_path, dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
-    print(f"\nGráfico de monitoreo guardado: {output_path}")
-    plt.show()
+    # ── Panel 4: Ahorro + CO2 ────────────────────────────────────────────
+    max_ah  = max(ahorro_m) * 1.3
+    max_ac  = ahorro_ac[-1] * 1.2
+    max_co2 = max(co2) * 1.3
+    p4_items = ""
+    for mes, am, ac, c2, ab in zip(meses, ahorro_m, ahorro_ac, co2, abrev):
+        h_bar = am / max_ah * 100
+        h_ac  = ac / max_ac * 100   # para la línea acumulada (como punto)
+        h_c2  = c2 / max_co2 * 100
+        p4_items += f"""
+        <div class="p4-col">
+          <div class="p4-bar-wrap">
+            <div class="p4-bar-ah"  style="height:{h_bar:.1f}%"></div>
+          </div>
+          <div class="p4-bar-wrap p4-co2-wrap">
+            <div class="p4-bar-co2" style="height:{h_c2:.1f}%"></div>
+          </div>
+          <div class="bar-label">{ab}</div>
+          <div class="p4-ac" style="bottom:{h_ac:.1f}%">·</div>
+        </div>"""
+
+    html = f"""<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<style>
+{_BASE_CSS}
+.page {{ width:1600px; padding:0 0 32px; }}
+
+.page-header {{
+  background: #1a3a5c;
+  padding: 22px 48px;
+  border-bottom: 3px solid #0ea5e9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}}
+.page-header h1 {{ font-size:19px; font-weight:700; color:#fff; }}
+.page-header p  {{ font-size:12px; color:#94a3b8; margin-top:4px; }}
+.header-kpis {{ display:flex; gap:28px; }}
+.hkpi {{ text-align:center; }}
+.hkpi-val {{ font-size:18px; font-weight:800; color:#0ea5e9; }}
+.hkpi-lbl {{ font-size:10px; color:#64748b; margin-top:2px; white-space:nowrap; }}
+
+/* Grid 2×2 */
+.panels-grid {{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px 28px;
+}}
+.panel {{
+  background: #1a2540;
+  border-radius: 14px;
+  padding: 20px 22px;
+}}
+.panel-title {{
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+}}
+.panel-sub {{
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 16px;
+}}
+
+/* Barras genéricas */
+.bars-row {{ display:flex; align-items:flex-end; gap:6px; height:180px; position:relative; }}
+.bar-col  {{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; }}
+.bar-val  {{ font-size:10px; color:#94a3b8; font-weight:600; min-height:14px; text-align:center; }}
+.bar-wrap {{ flex:1; width:100%; display:flex; align-items:flex-end; }}
+.bar      {{ width:100%; border-radius:3px 3px 0 0; min-height:3px; }}
+.bar-label {{ font-size:10px; color:#475569; text-align:center; padding-top:5px; line-height:1.4; }}
+
+/* Línea de referencia */
+.ref-wrap  {{ position:relative; }}
+.ref-line  {{ position:absolute; left:0;right:0; border-top:1.5px dashed #60a5fa; pointer-events:none; z-index:2; }}
+.ref-tag   {{ position:absolute; right:0; font-size:9.5px; color:#60a5fa; font-weight:600;
+              background:#1a2540; padding:0 4px; transform:translateY(-50%); }}
+
+/* Leyenda */
+.legend {{ display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; }}
+.legend-item {{ display:flex; align-items:center; gap:6px; font-size:11px; color:#64748b; }}
+.ldot {{ width:10px;height:10px;border-radius:2px;flex-shrink:0; }}
+
+/* ── Panel 2: barras dobles ── */
+.bar-col2 {{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; }}
+.bar-pair {{ flex:1; width:100%; display:flex; align-items:flex-end; }}
+.bar-pair-inner {{ width:100%; display:flex; align-items:flex-end; gap:2px; height:100%; }}
+.b-solar   {{ flex:1; border-radius:3px 3px 0 0; background:#f59e0b; min-height:3px; }}
+.b-consumo {{ flex:1; border-radius:3px 3px 0 0; background:#ef4444; min-height:3px; }}
+
+/* ── Panel 3: balance ── */
+.bal-area {{ height:200px; position:relative; }}
+.bal-row  {{ display:flex; align-items:stretch; gap:6px; height:100%; }}
+.bal-col  {{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; height:100%; }}
+.bal-val  {{ font-size:9.5px; font-weight:700; min-height:14px; text-align:center; }}
+.bal-wrap {{ flex:1; width:100%; display:flex; flex-direction:column; }}
+.bal-bar-pos {{ width:100%; background:#10b981; border-radius:3px 3px 0 0; transition:height .2s; }}
+.zero-line   {{ width:100%; height:2px; background:#334155; flex-shrink:0; }}
+.bal-bar-neg {{ width:100%; background:#8b5cf6; border-radius:0 0 3px 3px; transition:height .2s; }}
+
+/* ── Panel 4: ahorro + CO₂ ── */
+.p4-row  {{ display:flex; align-items:flex-end; gap:6px; height:180px; position:relative; }}
+.p4-col  {{ flex:1; display:flex; flex-direction:column; align-items:center; height:100%; position:relative; }}
+.p4-bar-wrap  {{ width:100%; flex:1; display:flex; align-items:flex-end; }}
+.p4-bar-ah    {{ width:60%; border-radius:3px 3px 0 0; background:#f59e0b; margin:0 auto; min-height:3px; }}
+.p4-co2-wrap  {{ width:100%; height:60px; display:flex; align-items:flex-end; }}
+.p4-bar-co2   {{ width:60%; border-radius:3px 3px 0 0; background:#14b8a6; margin:0 auto; min-height:3px; }}
+.p4-ac {{ position:absolute; font-size:14px; color:#34d399; font-weight:900; left:50%; transform:translateX(-50%); }}
+
+/* Tabla de alertas */
+.alerts-wrap {{ padding:0 28px 20px; }}
+.alerts-title {{ font-size:13px; font-weight:700; color:#e2e8f0; margin-bottom:12px; }}
+.alerts-grid {{
+  display:grid;
+  grid-template-columns: repeat(11,1fr);
+  gap:8px;
+}}
+.alert-card {{
+  border-radius:8px;
+  padding:10px 8px;
+  text-align:center;
+}}
+.ac-mes   {{ font-size:11px; font-weight:700; color:#e2e8f0; }}
+.ac-cob   {{ font-size:16px; font-weight:800; margin:4px 0 2px; }}
+.ac-nivel {{ font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }}
+</style>
+</head><body>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Hospital Nazareth 1 · Monitoreo Solar — Barranquilla 2018</h1>
+      <p>Área instalada: {AREA_PANELES_M2:.0f} m²  ·  Eficiencia: {EFICIENCIA_SISTEMA*100:.0f}%  ·  Pérdidas: {PERDIDAS_SISTEMA_PCT*100:.0f}%  ·  Irradiación: IDEAM / NASA POWER</p>
+    </div>
+    <div class="header-kpis">
+      <div class="hkpi">
+        <div class="hkpi-val">{total_gen:,.0f}</div>
+        <div class="hkpi-lbl">kWh generados (Ene–Nov)</div>
+      </div>
+      <div class="hkpi">
+        <div class="hkpi-val">{cob_prom:.1f}%</div>
+        <div class="hkpi-lbl">Cobertura solar promedio</div>
+      </div>
+      <div class="hkpi">
+        <div class="hkpi-val">${total_ahorro:.1f}M</div>
+        <div class="hkpi-lbl">Ahorro estimado COP</div>
+      </div>
+      <div class="hkpi">
+        <div class="hkpi-val">{total_co2:,.0f}</div>
+        <div class="hkpi-lbl">kg CO₂ evitados</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panels-grid">
+
+    <!-- Panel 1: Irradiación -->
+    <div class="panel">
+      <div class="panel-title">Irradiación Solar GHI — Barranquilla 2018</div>
+      <div class="panel-sub">kWh/m²/día · Fuente: IDEAM / NASA POWER</div>
+      <div class="ref-wrap">
+        <div class="bars-row">{p1_bars}</div>
+        <div class="ref-line" style="bottom:0;top:auto;
+          bottom:{(5.0 - irr_min)/(irr_max - irr_min)*100:.1f}%">
+          <span class="ref-tag">Ref. nacional 5.0</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="ldot" style="background:#f59e0b"></div>≥ 5.0 kWh/m²/día (temporada seca)</div>
+        <div class="legend-item"><div class="ldot" style="background:#3b82f6"></div>< 5.0 kWh/m²/día (temporada lluvias)</div>
+      </div>
+    </div>
+
+    <!-- Panel 2: Generación vs Consumo -->
+    <div class="panel">
+      <div class="panel-title">Generación Solar vs. Consumo Real</div>
+      <div class="panel-sub">kWh/mes — etiqueta = cobertura solar del mes</div>
+      <div class="bars-row" style="height:180px">{p2_bars}</div>
+      <div class="legend">
+        <div class="legend-item"><div class="ldot" style="background:#f59e0b"></div>Generación solar</div>
+        <div class="legend-item"><div class="ldot" style="background:#ef4444"></div>Consumo real</div>
+        <div class="legend-item"><div class="ldot" style="background:#22c55e"></div>Cobertura ≥ 80%</div>
+        <div class="legend-item"><div class="ldot" style="background:#f59e0b"></div>50–79%</div>
+        <div class="legend-item"><div class="ldot" style="background:#ef4444"></div>< 50%</div>
+      </div>
+    </div>
+
+    <!-- Panel 3: Balance -->
+    <div class="panel">
+      <div class="panel-title">Balance Energético Mensual — Superávit / Déficit</div>
+      <div class="panel-sub">kWh/mes respecto al consumo real</div>
+      <div class="bal-area">
+        <div class="bal-row">{p3_bars}</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="ldot" style="background:#10b981"></div>Superávit solar</div>
+        <div class="legend-item"><div class="ldot" style="background:#8b5cf6"></div>Déficit energético</div>
+      </div>
+    </div>
+
+    <!-- Panel 4: Ahorro + CO₂ -->
+    <div class="panel">
+      <div class="panel-title">Ahorro Económico y Reducción de CO₂</div>
+      <div class="panel-sub">Barras amarillas = ahorro mensual (M COP) · Barras teal = CO₂ evitado (kg) · Puntos verdes = acumulado</div>
+      <div class="p4-row">{p4_items}</div>
+      <div class="legend">
+        <div class="legend-item"><div class="ldot" style="background:#f59e0b"></div>Ahorro mensual (M COP)</div>
+        <div class="legend-item"><div class="ldot" style="background:#14b8a6"></div>CO₂ evitado (kg)</div>
+        <div class="legend-item" style="color:#34d399">· Ahorro acumulado</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tabla de alertas -->
+  <div class="alerts-wrap">
+    <div class="alerts-title">Estado operativo por mes — Semáforo de cobertura</div>
+    <div class="alerts-grid">"""
+
+    for mes, ab, cv in zip(meses, abrev, cob):
+        if cv >= 60:
+            bg, tc, nivel = "#0f2a1e", "#22c55e", "OK"
+        elif cv >= 30:
+            bg, tc, nivel = "#2a1f0a", "#f59e0b", "AVISO"
+        else:
+            bg, tc, nivel = "#2a0f0f", "#ef4444", "CRÍTICO"
+        html += f"""
+      <div class="alert-card" style="background:{bg}">
+        <div class="ac-mes">{ab}</div>
+        <div class="ac-cob" style="color:{tc}">{cv:.0f}%</div>
+        <div class="ac-nivel" style="color:{tc}">{nivel}</div>
+      </div>"""
+
+    html += """
+    </div>
+  </div>
+</div>
+</body></html>"""
+
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "monitoreo_solar_nazareth.png")
+    _render_html(html, out)
 
 
 # ===========================================================================

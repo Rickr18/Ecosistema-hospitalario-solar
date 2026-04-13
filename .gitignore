@@ -1,15 +1,7 @@
-actividades/actividad-02-modelo-basico-generacion-solar-python/*.png
-generacion_solar_nazareth.png
-escenarios_instalacion_nazareth.png
+# ── Entorno virtual Python ──────────────────────────────────────────────────
+.venv/
 
-# Actividad 3 - graficos generados
-actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_diario_demanda.png
-actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_semanal_demanda.png
-actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_mensual_demanda.png
-actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/heatmap_demanda_horaria.png
-
-# Python caches y entorno virtual
-/.venv/
+# ── Python — caches y compilados ────────────────────────────────────────────
 **/__pycache__/
 *.pyc
 *.pyo
@@ -17,15 +9,48 @@ actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/heatmap_dema
 .pytest_cache/
 .mypy_cache/
 
-# Presentación interactiva — build artifacts and dependencies
-presentacion-interactiva/node_modules/
-presentacion-interactiva/dist/
+# ── Imágenes generadas por los scripts (artefactos locales) ─────────────────
+# Actividad 2
+actividades/actividad-02-modelo-basico-generacion-solar-python/*.png
+generacion_solar_nazareth.png
+escenarios_instalacion_nazareth.png
 
-# Entregas para mooddle
-Entrega_Hospital_Nazareth1
+# Actividad 3
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_diario_demanda.png
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_semanal_demanda.png
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/perfil_mensual_demanda.png
+actividades/actividad-03-simulacion-demanda-energetica-hospitalaria/heatmap_demanda_horaria.png
+
+# Actividad 5
+actividades/actividad-05-design-thinking-problema-digital-hospitales/*.png
+
+# ── Variables de entorno / secretos ─────────────────────────────────────────
+.env
+.env.*
+**/.env
+**/.env.*
+
+# ── Apps Node / React ───────────────────────────────────────────────────────
+# Actividad 1 — Presentación interactiva
+actividades/actividad-01-mapa-ecosistema-hospitalario-solar/presentacion-interactiva/node_modules/
+actividades/actividad-01-mapa-ecosistema-hospitalario-solar/presentacion-interactiva/dist/
+
+# Actividad 6 — Prototipo UX monitoreo solar
+actividades/actividad-06-prototipo-ux-app-monitoreo-solar/monitoreo-solar-app/node_modules/
+actividades/actividad-06-prototipo-ux-app-monitoreo-solar/monitoreo-solar-app/dist/
+
+# ── Entregas para Moodle ─────────────────────────────────────────────────────
+Entrega_Hospital_Nazareth1/
 Entrega_Hospital_Nazareth1.zip
 
-# Actividad 4 - artefactos locales
-actividades/actividad-04-dashboard-energetico-gerencia-hospitalaria/__pycache__/
-actividades/actividad-04-dashboard-energetico-gerencia-hospitalaria/.env
-actividades/actividad-04-dashboard-energetico-gerencia-hospitalaria/.env.*
+# ── Claude Code ──────────────────────────────────────────────────────────────
+.claude/
+
+# ── OS / editores ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+.idea/
+.vscode/settings.json
