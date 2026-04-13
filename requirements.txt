@@ -1,6 +1,16 @@
-matplotlib>=3.8
+# Dependencias Python del proyecto — Ecosistema Hospitalario Solar
+# Instalar desde el entorno virtual: pip install -r requirements.txt
+
+# Núcleo científico
 numpy>=1.26
-openpyxl>=3.1
 pandas>=2.2
-dash
-plotly
+
+# Lectura de Excel
+openpyxl>=3.1
+
+# Visualización estática (Actividad 2 / diagnósticos)
+matplotlib>=3.8
+
+# Dashboard interactivo (Actividad 4)
+dash>=2.17
+plotly>=5.20

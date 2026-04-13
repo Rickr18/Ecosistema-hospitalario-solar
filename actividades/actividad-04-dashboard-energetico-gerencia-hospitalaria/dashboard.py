@@ -54,15 +54,18 @@ except FileNotFoundError as e:
 KPI_DF = calcular_kpis_anuales(CONSUMO_MENSUAL)
 
 # ---------------------------------------------------------------------------
-# Paleta de colores (estilo médico/limpio)
+# Paleta de colores — alineada con Actividad 3
 # ---------------------------------------------------------------------------
-VERDE    = "#1D9E75"
-ROJO     = "#E24B4A"
-AMARILLO = "#BA7517"
-AZUL     = "#185FA5"
-GRIS     = "#5F5E5A"
-BG       = "#F8F9FA"
+VERDE    = "#10b981"   # mismo que act-3
+ROJO     = "#ef4444"   # mismo que act-3
+AMARILLO = "#f59e0b"   # mismo que act-3
+AZUL     = "#2563eb"   # mismo azul acento del header
+PURPURA  = "#6366f1"   # data center
+GRIS     = "#64748b"   # muted
+BG       = "#f0f4f8"   # mismo fondo act-3
 CARD_BG  = "#FFFFFF"
+HEADER_1 = "#1e3a5f"   # header gradiente inicio
+HEADER_2 = "#2563eb"   # header gradiente fin
 
 OPCIONES_MES = [{"label": m, "value": m} for m in MESES_ORDENADOS]
 
@@ -74,22 +77,25 @@ def tarjeta_kpi(titulo: str, valor: str, unidad: str, color: str = GRIS) -> html
     return html.Div([
         html.P(titulo, style={
             "fontSize": "11px", "textTransform": "uppercase",
-            "letterSpacing": "0.08em", "color": GRIS, "margin": "0 0 4px 0",
+            "letterSpacing": "0.08em", "color": GRIS, "margin": "0 0 6px 0",
+            "fontWeight": "600",
         }),
         html.P(valor, style={
-            "fontSize": "26px", "fontWeight": "600",
+            "fontSize": "26px", "fontWeight": "800",
             "color": color, "margin": "0", "lineHeight": "1",
         }),
         html.P(unidad, style={
-            "fontSize": "11px", "color": GRIS, "margin": "4px 0 0 0",
+            "fontSize": "11px", "color": GRIS, "margin": "5px 0 0 0",
         }),
     ], style={
         "background": CARD_BG,
-        "border": "1px solid #E5E7EB",
-        "borderRadius": "10px",
+        "border": "1px solid #e2e8f0",
+        "borderTop": f"4px solid {color}",
+        "borderRadius": "12px",
         "padding": "16px 20px",
         "flex": "1",
         "minWidth": "160px",
+        "boxShadow": "0 2px 12px rgba(0,0,0,.07)",
     })
 
 
@@ -110,6 +116,29 @@ def badge_alerta(nivel: str, mensaje: str) -> html.Div:
     })
 
 
+def _titulo_seccion(texto: str) -> html.P:
+    return html.P(texto, style={
+        "fontSize": "12px", "fontWeight": "700", "color": HEADER_1,
+        "textTransform": "uppercase", "letterSpacing": "0.06em",
+        "borderLeft": f"3px solid {AZUL}", "paddingLeft": "8px",
+        "marginBottom": "10px",
+    })
+
+
+def _card_style(flex: str = "unset") -> dict:
+    style = {
+        "background": CARD_BG,
+        "border": "1px solid #e2e8f0",
+        "borderRadius": "12px",
+        "padding": "16px 20px",
+        "boxShadow": "0 2px 12px rgba(0,0,0,.07)",
+        "marginBottom": "20px",
+    }
+    if flex != "unset":
+        style["flex"] = flex
+    return style
+
+
 # ---------------------------------------------------------------------------
 # Layout de la aplicación
 # ---------------------------------------------------------------------------
@@ -126,15 +155,18 @@ app.layout = html.Div([
     html.Div([
         html.Div([
             html.H1("Dashboard Energético", style={
-                "fontSize": "20px", "fontWeight": "700",
-                "color": "#111827", "margin": "0",
+                "fontSize": "22px", "fontWeight": "700",
+                "color": "#ffffff", "margin": "0",
             }),
             html.P("Hospital Nazareth 1 · Barranquilla · Datos reales 2018", style={
-                "fontSize": "13px", "color": GRIS, "margin": "2px 0 0 0",
+                "fontSize": "13px", "color": "rgba(255,255,255,0.82)", "margin": "3px 0 0 0",
             }),
         ]),
         html.Div([
-            html.Label("Mes seleccionado:", style={"fontSize": "12px", "color": GRIS, "marginBottom": "4px"}),
+            html.Label("Mes:", style={
+                "fontSize": "12px", "color": "rgba(255,255,255,0.75)",
+                "marginBottom": "4px", "fontWeight": "600",
+            }),
             dcc.Dropdown(
                 id="selector-mes",
                 options=OPCIONES_MES,
@@ -145,8 +177,9 @@ app.layout = html.Div([
         ], style={"display": "flex", "flexDirection": "column", "alignItems": "flex-end"}),
     ], style={
         "display": "flex", "justifyContent": "space-between", "alignItems": "center",
-        "background": CARD_BG, "padding": "16px 24px",
-        "borderBottom": "1px solid #E5E7EB", "marginBottom": "20px",
+        "background": f"linear-gradient(135deg, {HEADER_1} 0%, {HEADER_2} 100%)",
+        "padding": "20px 28px",
+        "marginBottom": "0",
     }),
 
     # ── Cuerpo principal ────────────────────────────────────────────────────
@@ -154,116 +187,66 @@ app.layout = html.Div([
 
         # Fila 1: KPI Cards
         html.Div(id="kpi-cards", style={
-            "display": "flex", "gap": "12px",
-            "flexWrap": "wrap", "marginBottom": "20px",
+            "display": "flex", "gap": "14px",
+            "flexWrap": "wrap", "marginBottom": "22px",
         }),
 
         # Fila 2: Gráfico principal + Gauge
         html.Div([
             html.Div([
-                html.P("Generación solar vs. consumo real (kWh/mes)", style={
-                    "fontSize": "12px", "fontWeight": "600", "color": GRIS,
-                    "textTransform": "uppercase", "letterSpacing": "0.06em",
-                    "marginBottom": "8px",
-                }),
+                _titulo_seccion("Generación solar vs. consumo real (kWh/mes)"),
                 dcc.Graph(id="grafico-gen-consumo", config={"displayModeBar": False},
                           style={"height": "280px"}),
-            ], style={
-                "flex": "2", "background": CARD_BG,
-                "border": "1px solid #E5E7EB", "borderRadius": "10px",
-                "padding": "16px 20px",
-            }),
+            ], style=_card_style(flex="2")),
 
             html.Div([
-                html.P("Autosuficiencia solar", style={
-                    "fontSize": "12px", "fontWeight": "600", "color": GRIS,
-                    "textTransform": "uppercase", "letterSpacing": "0.06em",
-                    "marginBottom": "8px",
-                }),
+                _titulo_seccion("Autosuficiencia solar del mes"),
                 dcc.Graph(id="grafico-gauge", config={"displayModeBar": False},
                           style={"height": "280px"}),
-            ], style={
-                "flex": "1", "background": CARD_BG,
-                "border": "1px solid #E5E7EB", "borderRadius": "10px",
-                "padding": "16px 20px",
-            }),
+            ], style=_card_style(flex="1")),
         ], style={"display": "flex", "gap": "16px", "marginBottom": "20px"}),
 
-        # Fila 3: Áreas + Alertas + Escenarios
+        # Fila 3: Áreas + Alertas
         html.Div([
 
-            # Barras de áreas
             html.Div([
-                html.P("Consumo por área crítica", style={
-                    "fontSize": "12px", "fontWeight": "600", "color": GRIS,
-                    "textTransform": "uppercase", "letterSpacing": "0.06em",
-                    "marginBottom": "8px",
-                }),
+                _titulo_seccion("Consumo por área crítica"),
                 dcc.Graph(id="grafico-areas", config={"displayModeBar": False},
                           style={"height": "260px"}),
-            ], style={
-                "flex": "1", "background": CARD_BG,
-                "border": "1px solid #E5E7EB", "borderRadius": "10px",
-                "padding": "16px 20px",
-            }),
+            ], style=_card_style(flex="1")),
 
-            # Alertas gerenciales
             html.Div([
-                html.P("Alertas gerenciales", style={
-                    "fontSize": "12px", "fontWeight": "600", "color": GRIS,
-                    "textTransform": "uppercase", "letterSpacing": "0.06em",
-                    "marginBottom": "12px",
-                }),
+                _titulo_seccion("Alertas gerenciales"),
                 html.Div(id="alertas-box"),
-            ], style={
-                "flex": "1", "background": CARD_BG,
-                "border": "1px solid #E5E7EB", "borderRadius": "10px",
-                "padding": "16px 20px",
-            }),
+            ], style=_card_style(flex="1")),
 
         ], style={"display": "flex", "gap": "16px", "marginBottom": "20px"}),
 
-        # Fila 4: Comparación de escenarios (anual)
+        # Fila 4: Evolución anual
         html.Div([
-            html.P("Comparación anual: generación solar vs. consumo real (todos los meses)", style={
-                "fontSize": "12px", "fontWeight": "600", "color": GRIS,
-                "textTransform": "uppercase", "letterSpacing": "0.06em",
-                "marginBottom": "8px",
-            }),
+            _titulo_seccion("Evolución anual: generación solar vs. consumo real (Ene–Nov 2018)"),
             dcc.Graph(id="grafico-anual", config={"displayModeBar": False},
                       style={"height": "260px"}),
-        ], style={
-            "background": CARD_BG,
-            "border": "1px solid #E5E7EB", "borderRadius": "10px",
-            "padding": "16px 20px", "marginBottom": "20px",
-        }),
+        ], style=_card_style()),
 
         # Fila 5: Escenarios de instalación
         html.Div([
-            html.P("Escenarios de instalación solar (impacto en cobertura diaria)", style={
-                "fontSize": "12px", "fontWeight": "600", "color": GRIS,
-                "textTransform": "uppercase", "letterSpacing": "0.06em",
-                "marginBottom": "8px",
-            }),
+            _titulo_seccion("Escenarios de instalación solar — cobertura diaria estimada"),
             dcc.Graph(id="grafico-escenarios", config={"displayModeBar": False},
-                      style={"height": "220px"}),
-        ], style={
-            "background": CARD_BG,
-            "border": "1px solid #E5E7EB", "borderRadius": "10px",
-            "padding": "16px 20px", "marginBottom": "20px",
-        }),
+                      style={"height": "240px"}),
+        ], style=_card_style()),
 
         # Pie de página
         html.P(
-            f"Actividad 4 · Gerencia de Proyectos Sostenibles · "
+            f"Actividad 4 · Dashboard Energético · Gerencia Hospitalaria · "
             f"Área instalada: {AREA_PANELES_M2:.0f} m² · "
             f"Eficiencia: {EFICIENCIA_SISTEMA * 100:.0f}% · "
             f"Tarifa referencia: ${TARIFA_COP_KWH:,.0f} COP/kWh",
             style={"fontSize": "11px", "color": GRIS, "textAlign": "center",
-                   "padding": "8px 0 16px 0"},
+                   "padding": "10px 0 18px 0"},
         ),
 
-    ], style={"maxWidth": "1300px", "margin": "0 auto", "padding": "0 24px"}),
+    ], style={"maxWidth": "1300px", "margin": "0 auto", "padding": "22px 24px 0"}),
 
 ], style={"background": BG, "minHeight": "100vh", "fontFamily": "system-ui, sans-serif"})
 
@@ -331,10 +314,9 @@ def actualizar_gauge(mes: str) -> go.Figure:
     color = VERDE if val >= 15 else AMARILLO if val >= 10 else ROJO
 
     fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=val,
-        delta={"reference": 15, "suffix": "%", "valueformat": ".1f"},
-        number={"suffix": "%", "font": {"size": 36, "color": color}},
+        number={"suffix": "%", "font": {"size": 40, "color": color}, "valueformat": ".1f"},
         gauge={
             "axis": {"range": [0, 100], "tickwidth": 1,
                      "tickcolor": GRIS, "tickfont": {"size": 10}},
@@ -456,7 +438,7 @@ def actualizar_escenarios(mes: str) -> go.Figure:
     nombres = list(esc.keys())
     gen_dia = [esc[n]["generacion_diaria_kwh"] for n in nombres]
     cob_pct = [esc[n]["cobertura_pct"] for n in nombres]
-    colores = [AZUL, VERDE, "#7F77DD"]
+    colores = [AZUL, VERDE, PURPURA]
 
     fig = go.Figure()
     fig.add_bar(
